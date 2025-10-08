@@ -3,10 +3,10 @@
         font-weight: bold;
     }
     .brand-blue {
-        color: blue;
+        color: #1511D6;
     }
     .brand-orange {
-        color: orange;
+        color: #E82A09;
     }
 </style>
 
