@@ -1,12 +1,10 @@
-<div style="text-align: center;">
-  <img 
-    src="../branding/Logo_smartedify.jpg" 
-    width="300" 
-    height="300" 
-    alt="Logo de SmartEdify" 
-    style="display: block; margin: 0 auto;"
-  />
-  <h3>Gestión integral de condominios</h3>
+<div align="center">
+  <img src="../branding/Logo_smartedify.jpg" width="100" height="100" alt="Logo SmartEdify" />
+  <p>
+    <span style="color: #1511D6; font-weight: bold;">Smart</span>
+    <span style="color: #E82A09; font-weight: bold;">Edify</span>
+  </p>
+  <p><em>Gestión integral de condominios</em></p>
 </div>
 
 ---
