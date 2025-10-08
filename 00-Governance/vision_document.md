@@ -1,6 +1,6 @@
 <div align="center">
   <img src="../branding/Logo_smartedify.jpg" width="200" height="200" alt="Logo SmartEdify" />
-  <p><em>Gestión integral de condominios</em></p>
+  <p><em>Construyendo infraestructura crítica para la gobernanza comunitaria del futuro.</em></p>
 </div>
 
 ---
