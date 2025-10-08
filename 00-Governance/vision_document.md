@@ -1,7 +1,7 @@
 <div align="center">
     <img src="../Branding/Logo_smartedify.jpg"/>
-    <h1>Smart</h1><h1>Edify</h1>
-    <h3><em>Build high-quality software faster.</em></h3>
+    <h1>Smart<h1><h1>Edify</h1>
+    <h3><em>Gestion integral de condominios</em></h3>
 </div>
 
 ---
