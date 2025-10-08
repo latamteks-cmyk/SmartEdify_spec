@@ -422,7 +422,7 @@ gantt
     Sprint 4 Tenancy Service :s4, 2025-11-11, 21d
     Sprint 5 Compliance Service :s5, 2025-12-02, 21d
     QA Core Testing :milestone, m1, 2025-12-23, 1d
-    Deploy v1 Core :milestone, d1, 2025-12-27, 1d
+    Deploy v1 Core :milestone,crit, d1, 2025-12-27, 1d
     
     section Phase 2 Governance Operations
     Sprint 6 Governance Service :s6, 2026-01-06, 21d
@@ -430,27 +430,27 @@ gantt
     Sprint 8 Asset Management :s8, 2026-02-17, 21d
     Sprint 9 Notifications Service :s9, 2026-03-10, 21d
     QA Governance Testing :milestone, m2, 2026-04-02, 1d
-    Deploy v2 Governance :milestone, d2, 2026-04-06, 1d
+    Deploy v2 Governance :milestone,crit, d2, 2026-04-06, 1d
     
     section Phase 3 Finance Payroll
     Sprint 10 Finance Service :s10, 2026-04-07, 21d
     Sprint 11 Payroll Service :s11, 2026-04-28, 22d
     Sprint 12 HR Compliance :s12, 2026-05-20, 21d
     QA Finance Testing :milestone, m3, 2026-06-10, 1d
-    Deploy v3 Finance :milestone, d3, 2026-06-14, 1d
+    Deploy v3 Finance :milestone,crit, d3, 2026-06-14, 1d
     
     section Phase 4 Business Analytics
     Sprint 13 Analytics Service :s13, 2026-06-16, 22d
     Sprint 14 Marketplace Service :s14, 2026-07-08, 21d
     Sprint 15 Observability :s15, 2026-07-29, 21d
     QA Business Testing :milestone, m4, 2026-08-19, 1d
-    Deploy v4 Business :milestone, d4, 2026-08-23, 1d
+    Deploy v4 Business :milestone,crit, d4, 2026-08-23, 1d
     
     section Phase 5 Release
     Sprint 16 Hardening :s16, 2026-08-24, 22d
     Sprint 17 Load Testing :s17, 2026-09-15, 21d
     Release Candidate :milestone, m5, 2026-10-06, 1d
-    Go Live Production :milestone, d5, 2026-10-08, 1d
+    Go Live Production :milestone,crit, d5, 2026-10-08, 1d
 ```
 
 ---
