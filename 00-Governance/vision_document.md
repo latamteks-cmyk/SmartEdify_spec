@@ -342,8 +342,16 @@ Todas las validaciones normativas se realizan en modo fail-closed: si el Complia
 En resumen, el `Governance-Service` transforma la gobernanza condominial tradicional en un **proceso digital, seguro, transparente y normativamente robusto**.
 
 ### 4.5. `Compliance-Service` (3012)
-Valida políticas legales, roles vigentes y parámetros normativos.  
-Opera en dos modos: **consulta bajo demanda** y **emisión de boletines de actualización** (ej. nombramientos o tarifas).
+El **Compliance-Service** es el **cerebro normativo central** de SmartEdify. Garantiza que toda operación del ecosistema —desde un login hasta una asamblea, una nómina o una solicitud de privacidad— se ejecute conforme a las leyes, estatutos y políticas vigentes en cada jurisdicción, con **evidencia auditable, trazabilidad inmutable y cumplimiento en tiempo real**.
+Sus funciones esenciales incluyen:
+- **Validación normativa en runtime**: mediante una **Decision API (PDP)** que responde con `permit/deny + obligations`, usando políticas firmadas (OPA/Cedar) y contexto estructurado (`tenant_id`, `jurisdiction`, `action`, etc.). Opera en modo **fail-closed**: si el servicio falla o no responde, la operación se deniega para preservar la integridad legal.
+- **Difusión de cambios legales mediante boletines**: emite eventos idempotentes en Kafka (`RoleUpdateIssued`, `TariffScheduleUpdated`, `EligibilityRuleChanged`) que otros servicios consumen para aplicar actualizaciones sin acoplamiento ni reinicios.
+- **Gobernanza legal y estatutaria**: define reglas de quórum, plazos, firmantes por cargo, retención documental y elegibilidad, validadas por `Governance`, `Reservations` y otros servicios antes de ejecutar acciones críticas.
+- **Privacidad y DSAR orquestado**: coordina solicitudes de acceso y eliminación de datos a través de todos los microservicios, con borrado criptográfico, expiración de descargas (≤48h) y cierre con evidencia WORM.
+- **Soporte a identidad, fiscalidad y laboral**: establece niveles AAL, activa MFA por riesgo, valida DPoP en operaciones sensibles, y provee parámetros fiscales y laborales por país —sin ejecutar cálculos, que son responsabilidad de `Finance` y `Payroll`.
+El Compliance-Service **no autentica usuarios, no genera actas, no contabiliza ni almacena documentos**. Opera bajo límites claros: **define reglas, no ejecuta lógica de negocio**. Se integra con todos los dominios mediante **eventos asíncronos (Kafka)**, **políticas firmadas y distribuidas (Policy CDN)** y **consultas síncronas con caché efímero y validación criptográfica**.
+Todas sus decisiones incluyen metadatos jurídicos (`policy_version`, `law_ref`, `effective_from`), y se registran en **logs WORM con hash-chain**, asegurando auditoría forense.
+En resumen, el **Compliance-Service transforma el cumplimiento legal de una obligación estática en un servicio dinámico, distribuido y técnicamente robusto**, convirtiendo a SmartEdify en una plataforma donde **lo permitido por ley es también lo posible en el sistema**.
 
 ### 4.6. `Reservations-Service` (3013)
 Gestión de reservas de espacios comunes, calendario compartido y cobro automatizado según reglas del Governance Service.
