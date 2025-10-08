@@ -354,7 +354,21 @@ Todas sus decisiones incluyen metadatos jurídicos (`policy_version`, `law_ref`,
 En resumen, el **Compliance-Service transforma el cumplimiento legal de una obligación estática en un servicio dinámico, distribuido y técnicamente robusto**, convirtiendo a SmartEdify en una plataforma donde **lo permitido por ley es también lo posible en el sistema**.
 
 ### 4.6. `Reservations-Service` (3013)
-Gestión de reservas de espacios comunes, calendario compartido y cobro automatizado según reglas del Governance Service.
+
+El **`Reservations-Service`** es el microservicio responsable de la **gestión integral de reservas de espacios y recursos comunes** en SmartEdify. Opera en entornos **multi-tenant y multi-condominio**, garantizando que cada reserva sea **legalmente válida, operativamente coherente y financieramente trazable**.
+Sus funciones esenciales incluyen:
+- **Catálogo dinámico de espacios**: define capacidad, horarios, fechas bloqueadas y reglas por condominio.
+- **Elegibilidad en tiempo real**: consulta al **`Compliance-Service`** para validar límites por unidad, morosidad, aforo, edad o convivencia de eventos.
+- **Tarifas efectivas y automáticas**: aplica boletines de tarifas (`TariffScheduleUpdated`) con vigencia y prorrateo, sin lógica hardcodeada.
+- **Flujo completo de reserva**: desde búsqueda y *hold* temporal hasta confirmación, cancelación, penalidades y reembolsos, con notificaciones automáticas vía **`Notifications-Service`**.
+- **Check-in opcional con token contextual**: genera y valida un token efímero emitido por **`Identity-Service`** para verificar presencia en el slot reservado (sin usar Asset-QR, que pertenece a Asset Management).
+- **Auditoría inmutable**: registra todo el ciclo de vida de la reserva (`Requested`, `Confirmed`, `Cancelled`, `CheckedIn`, etc.) en Kafka, con contexto completo `{tenant, condominium, unit, user}`.
+El servicio **no autentica usuarios, no cobra directamente ni gestiona activos físicos**. Opera dentro de límites claros:  
+- La **identidad** la gestiona **`Identity-Service` (3001)**.  
+- El **cobro y reembolso** los ejecuta **`Finance-Service` (3007)**.  
+- Las **reglas y tarifas** las define **`Compliance-Service` (3012)**.  
+Se integra mediante **eventos asíncronos (Kafka)**, **consultas síncronas con DPoP** y **boletines normativos**, todo bajo principios de **Zero Trust**, **PBAC con OPA** y **Privacidad por Diseño**.
+En resumen, el **Reservations Service transforma la gestión de espacios comunes en un proceso digital, justo, auditado y alineado con la normativa vigente**, sin duplicar responsabilidades de otros dominios.
 
 ### 4.7. `Asset-Management-Service` (3010)
 Gestión de activos, incidencias, mantenimiento y trazabilidad mediante QR no encriptados.  
