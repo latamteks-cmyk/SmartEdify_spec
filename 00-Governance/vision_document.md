@@ -1,5 +1,3 @@
-
-![Logo de SmartEdify](./Branding/Logo_smartedify.jpg "Logo de la marca SmartEdify")
 ---
 
 # 📘 **SmartEdify — Documento de Visión**
