@@ -20,7 +20,7 @@ SmartEdify es una plataforma SaaS multi-tenant diseñada para la gestión integr
 Su propósito es **transformar la gobernanza, administración, seguridad y prestación de servicios comunes en entornos residenciales y comerciales mediante una solución digital unificada, segura y escalable.**
 La visión estratégica se centra en convertir a SmartEdify en el sistema operativo digital para comunidades, garantizando:
 Transparencia operativa con trazabilidad inmutable (logs WORM, firma electrónica y actas con respaldo jurídico).
-Cumplimiento legal adaptativo mediante un 'Compliance-Service' que valida en tiempo real regulaciones locales e internacionales (GDPR, LGPD, eIDAS, SUNAT, etc.).
+Cumplimiento legal adaptativo mediante un `Compliance-Service` que valida en tiempo real regulaciones locales e internacionales (GDPR, LGPD, eIDAS, SUNAT, etc.).
 Participación comunitaria inteligente, con asambleas digitales híbridas, votaciones seguras y reservas automatizadas.
 Experiencia de usuario unificada para propietarios, administradores, trabajadores y auditores, accesible por web y móvil.
 Cada tenant puede administrar múltiples condominios, con reglas de cumplimiento y políticas jurídicas independientes.
@@ -297,7 +297,7 @@ El **Identity Service** es la autoridad central de identidad de SmartEdify, dise
 
 Ofrece **autenticación fuerte (WebAuthn/Passkeys)**, emite **tokens con Proof-of-Possession (DPoP)** y genera **evidencia inmutable (WORM + hash-chain)** para auditorías. Además, produce **QR jurídicos efímeros** para asambleas, validación documental y acceso a salas virtuales.
 
-Se integra estrechamente con `**Compliance-service**`, **Governance**, **User Profiles** y **Tenancy**, y cumple con estándares como **GDPR, LGPD, eIDAS, NIST 800-63-4** y normativas locales de Latinoamérica.
+Se integra estrechamente con `Compliance-service`, `Governance-Service`, `User-Profiles-Service` y `Tenancy-Service`, y cumple con estándares como **GDPR, LGPD, eIDAS, NIST 800-63-4** y normativas locales de Latinoamérica.
 
 Sus métricas clave incluyen **≥99.95% de disponibilidad**, **<3s de latencia en autenticación** y **revocación global en ≤60s**, garantizando seguridad, usabilidad y cumplimiento al más alto nivel. En esencia, es el **fundamento de confianza digital** sobre el que se construye toda la gobernanza comunitaria en SmartEdify.
 
