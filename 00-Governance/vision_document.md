@@ -452,6 +452,13 @@ gantt
     Release Candidate :milestone, m5, 2026-10-06, 1d
     Go Live Production :milestone,crit, d5, 2026-10-08, 1d
 ```
+| Fase                                  | Objetivo                                               | Servicios                                                                       | Entregables                                         |
+| ------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **F1: Core Backbone**                 | Base de autenticación, identidad y cumplimiento legal. | Identity (3001), Profiles (3002), Tenancy (3003), Compliance (3012)             | ADRs, DBML, OpenAPI, pruebas SSO, RLS.              |
+| **F2: Governance & Operations (PMV)** | Primer MVP funcional del ecosistema.                   | Governance (3011), Asset Mgmt (3010), Reservations (3013), Notifications (3005) | Actas, asambleas híbridas, incidencias, reservas.   |
+| **F3: Finance & Payroll**             | Módulos contables y laborales.                         | Finance (3007), Payroll (3008), HR Compliance (3009)                            | Integración fiscal, cálculos multijurisdiccionales. |
+| **F4: Business & Observability**      | Inteligencia operativa y ecosistema comercial.         | Marketplace (3015), Analytics (3016), Observabilidad (Prometheus/Grafana)       | KPIs, dashboards, monitoreo global.                 |
+| **F5: Stabilization & Release**       | Hardening, optimización y certificaciones.             | Todos los anteriores                                                            | Auditorías, cumplimiento, RC y despliegue global.   |
 
 ---
 
