@@ -417,7 +417,7 @@ gantt
     
     section Phase 1 Core Backbone
     Sprint 1 Planning :done, s1, 2025-09-15, 14d
-    Sprint 2 Identity Service :active, s2, 2025-09-30, 21d
+    Sprint 2 Identity Service :crit, active, s2, 2025-09-30, 21d
     Sprint 3 User Profiles :s3, 2025-10-21, 21d
     Sprint 4 Tenancy Service :s4, 2025-11-11, 21d
     Sprint 5 Compliance Service :s5, 2025-12-02, 21d
