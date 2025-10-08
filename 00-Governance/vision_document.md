@@ -1,8 +1,20 @@
+<style>
+    .brand-highlight {
+        font-weight: bold;
+    }
+    .brand-blue {
+        color: blue;
+    }
+    .brand-orange {
+        color: orange;
+    }
+</style>
+
 <div align="center">
-    <img src="../Branding/Logo_smartedify.jpg" width="300" height="300" alt="Logo SmartEdify" />
+    <img src="../Branding/Logo_smartedify.jpg" width="100" height="100" alt="Logo SmartEdify" />
     <p>
-        <span style="color: blue; font-weight: bold;">Smart</span>
-        <span style="color: orange; font-weight: bold;">Edify</span>
+        <span class="brand-highlight brand-blue">Smart</span>
+        <span class="brand-highlight brand-orange">Edify</span>
     </p>
     <h3><em>Gestión integral de condominios</em></h3>
 </div>
