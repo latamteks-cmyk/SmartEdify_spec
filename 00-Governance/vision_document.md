@@ -313,8 +313,18 @@ Se integra estrechamente con `Identity-Service`, `Tenancy-Service`, `Governance-
 En esencia, el UPS es el **puente entre la identidad digital y la gobernanza comunitaria**, garantizando coherencia, trazabilidad y cumplimiento en entornos multi-tenant y multi-jurisdicción.
 
 ### 4.3. `Tenancy-Service` (3003)
-Define condominios, unidades, espacios y relación entre tenants y jurisdicciones legales.  
-Soporta residencia por país y RLS criptográfico.
+
+El **Tenancy Service (TS)** es la **columna vertebral organizacional y jurídica** de SmartEdify. Define y gestiona la jerarquía completa del ecosistema:  
+**Tenant → Condominio → Edificio → Unidad → Espacio**,  
+proporcionando la estructura sobre la cual operan todos los demás microservicios.
+Sus funciones clave incluyen:
+- **Creación y gestión de tenants** (como administradoras) y sus múltiples condominios.
+- **Modelado detallado de edificios, unidades privadas y espacios comunes**.
+- **Aislamiento total de datos** mediante *Row-Level Security (RLS)* por `tenant_id` y `condominium_id`.
+- **Asociación con jurisdicciones legales**, permitiendo el cumplimiento normativo local (GDPR, LGPD, leyes de Perú, Chile, etc.).
+- **Integración criptográfica y de eventos** con servicios como *Identity*, *User Profiles*, *Governance*, *Finance* y *Asset Management*.
+El TS actúa como la **“raíz de confianza organizacional”**, asegurando que cada operación en la plataforma —desde una votación hasta un pago o una orden de mantenimiento— ocurra dentro del **contexto legal, territorial y funcional correcto**.
+En resumen, es el fundamento que permite a SmartEdify escalar globalmente mientras mantiene **aislamiento seguro, trazabilidad legal y gobernanza contextual** en entornos multi-condominio y multi-jurisdicción.
 
 ### 4.4. `Governance-Service` (3011)
 Gestión de asambleas, actas, quórum, votaciones, mandatos y resoluciones con respaldo jurídico.  
