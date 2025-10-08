@@ -452,8 +452,8 @@ gantt
     Release Candidate :milestone, m5, 2026-10-06, 1d
     Go Live Production :milestone, d5, 2026-10-08, 1d
 
-    classDef qaMilestone fill:#fff176,stroke:#fdd835,stroke-width:2px
-    classDef deployMilestone fill:#ffd54f,stroke:#f9a825,stroke-width:2px
+    classDef qaMilestone fill:#fff176,stroke:#FFCDD2,stroke-width:2px
+    classDef deployMilestone fill:#ffd54f,stroke:#FFCDD2,stroke-width:2px
     class m1,m2,m3,m4,m5 qaMilestone
     class d1,d2,d3,d4,d5 deployMilestone
 ```
