@@ -291,7 +291,7 @@ flowchart TB
 
 ## 📦 4. Microservicios y Alcance Funcional
 
-### 4.1. 'Identity-Service' (3001)
+### 4.1. ´Identity-Service´ (3001)
 
 El **Identity Service** es la autoridad central de identidad de SmartEdify, diseñado bajo los principios de **Zero Trust**, **multi-tenancy** y **cumplimiento normativo transnacional**. Va más allá de la autenticación tradicional: actúa como pilar de **validez jurídica y trazabilidad criptográfica** para todas las acciones en la plataforma.
 
