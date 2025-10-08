@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="../branding/Logo_smartedify.jpg" width="100" height="100" alt="Logo SmartEdify" />
+  <img src="../branding/Logo_smartedify.jpg" width="200" height="200" alt="Logo SmartEdify" />
   <p>
     <span style="color: #1511D6; font-weight: bold;">Smart</span>
     <span style="color: #E82A09; font-weight: bold;">Edify</span>
