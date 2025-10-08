@@ -412,61 +412,45 @@ Transmisión en vivo de asambleas híbridas con registro legal de participación
 ---
 ```mermaid
 gantt
-    title 📆 Plan de Implementación de SmartEdify — Roadmap de Sprints 2025
+    title SmartEdify Implementation Roadmap 2025-2026
     dateFormat  YYYY-MM-DD
-    axisFormat  %b %d
-    section 🧱 Fase 1 — CORE BACKBONE (Autenticación, Perfiles, Tenants, Compliance)
-    Sprint 1: Planificación y Diseño de Arquitectura Base           :done, S1, 2025-09-15, 2025-09-29
-    Sprint 2: Implementación Identity-Service (3001) + Security ADRs:active, S2, 2025-09-30, 2025-10-20
-    Sprint 3: User-Profiles (3002) + Roles + Consentimientos         :S3, 2025-10-21, 2025-11-10
-    Sprint 4: Tenancy-Service (3003) + Estructura condominio/unidades:S4, 2025-11-11, 2025-12-01
-    Sprint 5: Compliance-Service (3012) Básico (validaciones runtime):S5, 2025-12-02, 2025-12-22
-    QA/Seguridad: Test integraciones Identity ↔ Profiles ↔ Tenancy   :milestone, M1, 2025-12-23, 3d
-    Deploy v1.0 CORE Backbone a entorno staging                      :milestone, D1, 2025-12-27, 2d
-
-    section ⚙️ Fase 2 — GOVERNANCE & OPERATIONS (PMV)
-    Sprint 6: Governance-Service (3011) + Flujos de Asambleas        :S6, 2026-01-06, 2026-01-26
-    Sprint 7: Reservations-Service (3013) + Scheduler + QR Asamblea  :S7, 2026-01-27, 2026-02-16
-    Sprint 8: Asset-Management-Service (3010) + Incidencias / WorkOrders:S8, 2026-02-17, 2026-03-09
-    Sprint 9: Notifications-Service (3005) + Plantillas multicanal   :S9, 2026-03-10, 2026-03-30
-    QA/Legal: Validación flujos híbridos Asamblea / Actas            :milestone, M2, 2026-04-02, 3d
-    Deploy PMV (Governance & Operations)                             :milestone, D2, 2026-04-06, 2d
-
-    section 💰 Fase 3 — FINANCE & PAYROLL
-    Sprint 10: Finance-Service (3007) + Integración Compliance fiscal:S10, 2026-04-07, 2026-04-27
-    Sprint 11: Payroll-Service (3008) + Cálculo legal multipaís      :S11, 2026-04-28, 2026-05-19
-    Sprint 12: HR Compliance (3009) + Obligaciones legales laborales :S12, 2026-05-20, 2026-06-09
-    QA Integración contable + auditoría                              :milestone, M3, 2026-06-10, 3d
-    Deploy v2.0 Finance & Payroll                                    :milestone, D3, 2026-06-14, 2d
-
-    section 📊 Fase 4 — BUSINESS & OBSERVABILIDAD AVANZADA
-    Sprint 13: Analytics-Service (3016) + Data Lake / KPIs condominio:S13, 2026-06-16, 2026-07-07
-    Sprint 14: Marketplace-Service (3015) + Integración Providers    :S14, 2026-07-08, 2026-07-28
-    Sprint 15: Observabilidad avanzada (OTel, Grafana, Prometheus)   :S15, 2026-07-29, 2026-08-18
-    QA final y pruebas de resiliencia multi-región                   :milestone, M4, 2026-08-19, 3d
-    Deploy v3.0 Business Layer & Observabilidad                      :milestone, D4, 2026-08-23, 2d
-
-    section 🚀 Fase 5 — STABILIZATION & RELEASE
-    Sprint 16: Hardening, Optimización de Costos y Documentación     :S16, 2026-08-24, 2026-09-14
-    Sprint 17: Auditoría de cumplimiento y pruebas de carga          :S17, 2026-09-15, 2026-10-05
-    Release Candidate Final (RC-1)                                   :milestone, M5, 2026-10-06, 2d
-    Go Live v4.0 SmartEdify Global                                   :milestone, D5, 2026-10-08, 1d
-```
-
----
-
-```mermaid
-gantt
-    title Roadmap de Implementación SmartEdify
-    dateFormat YYYY-MM-DD
-    section Fase 1: Fundacional
-    Identity / Profiles / Tenancy  :done, 2025-01-01, 2025-03-31
-    section Fase 2: Gobernanza y Cumplimiento
-    Governance / Compliance / Documents :active, 2025-04-01, 2025-07-31
-    section Fase 3: Operaciones
-    Finance / Payroll / Asset Mgmt :2025-08-01, 2025-11-30
-    section Fase 4: Expansión
-    Marketplace / Analytics / Streaming :2025-12-01, 2026-03-31
+    
+    section Phase 1 Core Backbone
+    Sprint 1 Planning :done, s1, 2025-09-15, 14d
+    Sprint 2 Identity Service :active, s2, 2025-09-30, 21d
+    Sprint 3 User Profiles :s3, 2025-10-21, 21d
+    Sprint 4 Tenancy Service :s4, 2025-11-11, 21d
+    Sprint 5 Compliance Service :s5, 2025-12-02, 21d
+    QA Core Testing :milestone, m1, 2025-12-23, 1d
+    Deploy v1 Core :milestone, d1, 2025-12-27, 1d
+    
+    section Phase 2 Governance Operations
+    Sprint 6 Governance Service :s6, 2026-01-06, 21d
+    Sprint 7 Reservations Service :s7, 2026-01-27, 21d
+    Sprint 8 Asset Management :s8, 2026-02-17, 21d
+    Sprint 9 Notifications Service :s9, 2026-03-10, 21d
+    QA Governance Testing :milestone, m2, 2026-04-02, 1d
+    Deploy v2 Governance :milestone, d2, 2026-04-06, 1d
+    
+    section Phase 3 Finance Payroll
+    Sprint 10 Finance Service :s10, 2026-04-07, 21d
+    Sprint 11 Payroll Service :s11, 2026-04-28, 22d
+    Sprint 12 HR Compliance :s12, 2026-05-20, 21d
+    QA Finance Testing :milestone, m3, 2026-06-10, 1d
+    Deploy v3 Finance :milestone, d3, 2026-06-14, 1d
+    
+    section Phase 4 Business Analytics
+    Sprint 13 Analytics Service :s13, 2026-06-16, 22d
+    Sprint 14 Marketplace Service :s14, 2026-07-08, 21d
+    Sprint 15 Observability :s15, 2026-07-29, 21d
+    QA Business Testing :milestone, m4, 2026-08-19, 1d
+    Deploy v4 Business :milestone, d4, 2026-08-23, 1d
+    
+    section Phase 5 Release
+    Sprint 16 Hardening :s16, 2026-08-24, 22d
+    Sprint 17 Load Testing :s17, 2026-09-15, 21d
+    Release Candidate :milestone, m5, 2026-10-06, 1d
+    Go Live Production :milestone, d5, 2026-10-08, 1d
 ```
 
 ---
