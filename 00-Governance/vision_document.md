@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="./Branding/Logo_smartedify.jpg"/>
+    <img src="SmartEdify_spec/Branding/Logo_smartedify.jpg"/>
     <h1>🌱 Spec Kit</h1>
     <h3><em>Build high-quality software faster.</em></h3>
 </div>
