@@ -8,9 +8,9 @@
   />
   <p class="brand-name">
     <span style: color: blue>Smart</span>
-    <span class="brand-orange">Edify</span>
+    <span style: color: orange>Edify</span>
   </p>
-  <h3 style: color: orange>Gestión integral de condominios</h3>
+  <h3>Gestión integral de condominios</h3>
 </div>
 
 ---
