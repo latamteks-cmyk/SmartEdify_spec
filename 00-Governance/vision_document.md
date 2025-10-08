@@ -312,42 +312,42 @@ Sus funciones clave incluyen:
 Se integra estrechamente con `Identity-Service`, `Tenancy-Service`, `Governance-Service` y `Compliance-Service`, asegurando que toda acción en la plataforma —votar, firmar, reservar, gestionar activos— se realice desde un **contexto legal y organizacional válido**.
 En esencia, el UPS es el **puente entre la identidad digital y la gobernanza comunitaria**, garantizando coherencia, trazabilidad y cumplimiento en entornos multi-tenant y multi-jurisdicción.
 
-### 4.3. Tenancy Service (3003)
+### 4.3. `Tenancy-Service` (3003)
 Define condominios, unidades, espacios y relación entre tenants y jurisdicciones legales.  
 Soporta residencia por país y RLS criptográfico.
 
-### 4.4. Governance Service (3011)
+### 4.4. `Governance-Service` (3011)
 Gestión de asambleas, actas, quórum, votaciones, mandatos y resoluciones con respaldo jurídico.  
 Integrado con Compliance para validación legal en tiempo de ejecución.
 
-### 4.5. Compliance Service (3012)
+### 4.5. `Compliance-Service` (3012)
 Valida políticas legales, roles vigentes y parámetros normativos.  
 Opera en dos modos: **consulta bajo demanda** y **emisión de boletines de actualización** (ej. nombramientos o tarifas).
 
-### 4.6. Reservations Service (3013)
+### 4.6. `Reservations-Service` (3013)
 Gestión de reservas de espacios comunes, calendario compartido y cobro automatizado según reglas del Governance Service.
 
-### 4.7. Asset Management Service (3010)
+### 4.7. `Asset-Management-Service` (3010)
 Gestión de activos, incidencias, mantenimiento y trazabilidad mediante QR no encriptados.  
 Permite asociar inspecciones y órdenes de trabajo a ubicaciones físicas.
 
-### 4.8. Finance Service (3007)
+### 4.8. `Finance-Service` (3007)
 Contabilidad, flujo de caja, tarifas, cuotas, conciliaciones y reportes fiscales bajo estándares NIC y normativa nacional.
 
-### 4.9. Payroll Service (3008)
+### 4.9. `Payroll-Service` (3008)
 Gestión de nóminas, beneficios y obligaciones laborales. Genera recibos de pago y se integra con APIs fiscales (SUNAT, IVSS, etc.).
 
-### 4.10. HR Compliance Service (3009)
+### 4.10. `HR-Compliance-Service` (3009)
 Validación de cumplimiento laboral, contratos y normativas por país. Monitoreo continuo de obligaciones legales del empleador.
 
-### 4.11. Notifications Service (3005)
+### 4.11. `Notifications-Service` (3005)
 Orquestador de notificaciones push, correo y mensajería interna por tenant.
 
-### 4.12. Documents Service (3006)
+### 4.12. `Documents-Service` (3006)
 Gestión documental con firma electrónica, versionado, cifrado y almacenamiento WORM.  
 Firma válida solo en documentos con requerimientos legales.
 
-### 4.13. Streaming Service (3014)
+### 4.13. `Streaming-Service` (3014)
 Transmisión en vivo de asambleas híbridas con registro legal de participación y timestamp certificado.
 
 ---
