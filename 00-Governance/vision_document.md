@@ -6,10 +6,6 @@
     alt="Logo de SmartEdify" 
     style="display: block; margin: 0 auto;"
   />
-  <p class="brand-name">
-    <span style: color: blue>Smart</span>
-    <span style: color: orange>Edify</span>
-  </p>
   <h3>Gestión integral de condominios</h3>
 </div>
 
