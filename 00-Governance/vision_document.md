@@ -291,9 +291,15 @@ flowchart TB
 
 ## 📦 4. Microservicios y Alcance Funcional
 
-### 4.1. Identity Service (3001)
-Proveedor central de identidad, autenticación y sesiones con cumplimiento normativo y soporte biométrico.  
-Incluye autenticación WebAuthn, DPoP, MFA adaptativo y generación de QR seguros para asambleas.
+### 4.1. 'Identity-Service' (3001)
+
+El **Identity Service** es la autoridad central de identidad de SmartEdify, diseñado bajo los principios de **Zero Trust**, **multi-tenancy** y **cumplimiento normativo transnacional**. Va más allá de la autenticación tradicional: actúa como pilar de **validez jurídica y trazabilidad criptográfica** para todas las acciones en la plataforma.
+
+Ofrece **autenticación fuerte (WebAuthn/Passkeys)**, emite **tokens con Proof-of-Possession (DPoP)** y genera **evidencia inmutable (WORM + hash-chain)** para auditorías. Además, produce **QR jurídicos efímeros** para asambleas, validación documental y acceso a salas virtuales.
+
+Se integra estrechamente con **Compliance**, **Governance**, **User Profiles** y **Tenancy**, y cumple con estándares como **GDPR, LGPD, eIDAS, NIST 800-63-4** y normativas locales de Latinoamérica.
+
+Sus métricas clave incluyen **≥99.95% de disponibilidad**, **<3s de latencia en autenticación** y **revocación global en ≤60s**, garantizando seguridad, usabilidad y cumplimiento al más alto nivel. En esencia, es el **fundamento de confianza digital** sobre el que se construye toda la gobernanza comunitaria en SmartEdify.
 
 ### 4.2. User Profiles (3002)
 Gestión de atributos, roles, relaciones jerárquicas y asociaciones con tenants y unidades residenciales.
