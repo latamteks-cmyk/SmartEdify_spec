@@ -17,10 +17,10 @@
 ## 🧭 1. Visión General
 
 SmartEdify es una plataforma SaaS multi-tenant diseñada para la gestión integral de comunidades y condominios, con enfoque mobile-first, Zero Trust, cumplimiento normativo transnacional y observabilidad end-to-end.
-Su propósito es transformar la gobernanza, administración, seguridad y prestación de servicios comunes en entornos residenciales y comerciales mediante una solución digital unificada, segura y escalable.
+Su propósito es **transformar la gobernanza, administración, seguridad y prestación de servicios comunes en entornos residenciales y comerciales mediante una solución digital unificada, segura y escalable.**
 La visión estratégica se centra en convertir a SmartEdify en el sistema operativo digital para comunidades, garantizando:
 Transparencia operativa con trazabilidad inmutable (logs WORM, firma electrónica y actas con respaldo jurídico).
-Cumplimiento legal adaptativo mediante un Compliance Service que valida en tiempo real regulaciones locales e internacionales (GDPR, LGPD, eIDAS, SUNAT, etc.).
+Cumplimiento legal adaptativo mediante un 'Compliance-Service' que valida en tiempo real regulaciones locales e internacionales (GDPR, LGPD, eIDAS, SUNAT, etc.).
 Participación comunitaria inteligente, con asambleas digitales híbridas, votaciones seguras y reservas automatizadas.
 Experiencia de usuario unificada para propietarios, administradores, trabajadores y auditores, accesible por web y móvil.
 Cada tenant puede administrar múltiples condominios, con reglas de cumplimiento y políticas jurídicas independientes.
