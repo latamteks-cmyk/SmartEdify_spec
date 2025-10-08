@@ -40,10 +40,7 @@ En su madurez plena, cada acción dentro de SmartEdify será auditable, legalmen
 %% Layout recomendado: elk
 %% Nota: Identity-QR (COSE/JWS, TTL corto, firmado) vs Asset-QR (no cifrado, identificación de activos/áreas)
 
----
-config:
-  layout: elk
----
+
 
 flowchart TB
 
