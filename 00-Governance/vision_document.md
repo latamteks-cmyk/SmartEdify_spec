@@ -168,6 +168,9 @@ flowchart TB
         (9090)"]
         GRAF["Grafana 
         (3000)"]
+       ALERTS["Alert Manager
+       SLO Monitoring
+       Business Metrics"]
   end
  subgraph PLT["Platform Layer"]
         MSG
@@ -286,7 +289,6 @@ flowchart TB
 | **Operador de Soporte / Mesa de Ayuda** | Da soporte técnico y revoca sesiones bajo procedimientos auditados.                     | Web Admin (Passkey)                        |
 | **Integrador Externo (API/B2B)**        | Sistema externo que interactúa mediante integraciones seguras.                          | API (OAuth2.1 + mTLS + DPoP opcional)      |
 
-
 ---
 
 ## 📦 4. Microservicios y Alcance Funcional
@@ -295,11 +297,17 @@ flowchart TB
 
 El **Identity Service** es la autoridad central de identidad de SmartEdify, diseñado bajo los principios de **Zero Trust**, **multi-tenancy** y **cumplimiento normativo transnacional**. Va más allá de la autenticación tradicional: actúa como pilar de **validez jurídica y trazabilidad criptográfica** para todas las acciones en la plataforma.
 
-Ofrece **autenticación fuerte (WebAuthn/Passkeys)**, emite **tokens con Proof-of-Possession (DPoP)** y genera **evidencia inmutable (WORM + hash-chain)** para auditorías. Además, produce **QR jurídicos efímeros** para asambleas, validación documental y acceso a salas virtuales.
+Ofrece **autenticación fuerte (WebAuthn/Passkeys)**, emite **tokens con Proof-of-Possession (DPoP)** y genera **evidencia inmutable (WORM + hash-chain)** para auditorías.
 
-Se integra estrechamente con `Compliance-service`, `Governance-Service`, `User-Profiles-Service` y `Tenancy-Service`, y cumple con estándares como **GDPR, LGPD, eIDAS, NIST 800-63-4** y normativas locales de Latinoamérica.
++ **Optimización de QR jurídicos**:
++   - **Cache de claves frecuentes**: Almacena claves de firma para eventos recurrentes (asambleas mensuales)
++   - **Pre-generación batch**: Genera lote de QR para eventos masivos (>100 participantes)
++   - **Compresión JWS**: Reduce tamaño payload en 40% para mobile optimization
 
-Sus métricas clave incluyen **≥99.95% de disponibilidad**, **<3s de latencia en autenticación** y **revocación global en ≤60s**, garantizando seguridad, usabilidad y cumplimiento al más alto nivel. En esencia, es el **fundamento de confianza digital** sobre el que se construye toda la gobernanza comunitaria en SmartEdify.
++ **Métricas ampliadas**:
++   - **Latencia QR generation**: ≤500ms (P95)
++   - **Throughput auth requests**: ≥1000 RPM por instancia
++   - **Cache hit rate**: ≥85% para JWKS
 
 ### 4.2. `User-Profiles-Service` (3002)
 
@@ -331,19 +339,16 @@ En resumen, es el fundamento que permite a SmartEdify escalar globalmente mientr
 
 El **`Governance-Service`** es el núcleo de **gobernanza digital** de SmartEdify. Orquesta todo el ciclo de vida de las decisiones comunitarias —desde la convocatoria hasta la publicación del acta— con **validez jurídica, trazabilidad inmutable y cumplimiento en tiempo real**.
 Sus funciones esenciales incluyen:
-- **Gestión de asambleas**: creación de agendas, envío de convocatorias y control de plazos, validados contra políticas del **`Compliance-Service`**.
-- **Verificación de asistencia**: mediante **QR jurídicos efímeros** emitidos por *`Identity-Service`*, validados criptográficamente (COSE/JWS + DPoP).
-- **Cálculo automático de quórum y votaciones**: usando datos de *`Tenancy-Service`* (estructura del condominio) y *`User-Profiles-Service`* (roles, ponderaciones, cargos oficiales).
-- **Generación de actas con respaldo legal**: firmadas **solo por cargos válidos** (presidente, secretario, etc.), almacenadas en *`Documents-Service`* con **WORM** y accesibles mediante verificación pública segura.
-- **Integración con Streaming**: para registrar participación en sesiones híbridas con timestamps certificados. Integración con `Streaming-Service` para registrar participación en sesiones híbridas con timestamps certificados y correlación criptográfica con la identidad verificada. El Streaming Service actúa como fuente única de verdad para la asistencia en tiempo real, independientemente del canal de transmisión utilizado (de terceros). Las integraciones con plataformas externas de video se tratan como adaptadores de experiencia de usuario, sin impacto en la validez jurídica de la evidencia generada
 Opera bajo límites claros: **no gestiona identidad, roles, finanzas ni almacenamiento de documentos**, sino que se integra con los servicios especializados correspondientes.
-Se apoya en **eventos asíncronos (Kafka)**, **políticas dinámicas (Compliance)** y **controles de seguridad estrictos (DPoP, JWKS, PBAC)** para garantizar que cada decisión sea **procesalmente correcta, auditada y legalmente defendible**.
-Todas las validaciones normativas se realizan en modo fail-closed: si el Compliance-Service no responde o devuelve un error, la operación (convocatoria, votación, publicación de acta) se deniega inmediatamente para preservar la integridad legal del proceso. 
+Se apoya en **eventos asíncronos (Kafka)**, **políticas dinámicas (Compliance)** y **controles de seguridad estrictos (DPoP, JWKS, PBAC)** para garantizar que cada decisión sea **procesalmente correcta, auditada y legalmente defendible**. 
+ **Manejo de indisponibilidad del Compliance-Service**:
+- Para operaciones no críticas, se utiliza una versión cacheadade las políticas (con TTL de 5 minutos).
+- Para operaciones críticas (como la convocatoria de asambleas o la validación de quórum), si el Compliance-Service no está disponible, se puede activar un **modo de emergencia** que permite la realización de la asamblea con validación posterior por parte del Compliance-Service (dentro de las 24 horas) y con la obligación de notificar a los participantes de la situación excepcional. Toda operación en modo de emergencia queda registrada en WORM para auditoría.
+
 En resumen, el `Governance-Service` transforma la gobernanza condominial tradicional en un **proceso digital, seguro, transparente y normativamente robusto**.
 
 ### 4.5. `Compliance-Service` (3012)
 
-### 4.5. `Compliance-Service` (3012)
 El **Compliance-Service** es el **cerebro normativo central** de SmartEdify. Garantiza que toda operación del ecosistema —desde un login hasta una asamblea, una nómina o una solicitud de privacidad— se ejecute conforme a las leyes, estatutos y políticas vigentes en cada jurisdicción, con **evidencia auditable, trazabilidad inmutable y cumplimiento en tiempo real**.
 Sus funciones esenciales incluyen:
 **Modo degradado con cache de políticas**: En caso de indisponibilidad del servicio, se puede utilizar una versión cacheadade las políticas (con un TTL de 5 minutos) para operaciones que no sean críticas. Para operaciones críticas (como asambleas o firmas) se requiere una validación en tiempo real y, si el servicio no está disponible, se puede permitir un modo de emergencia con aprobación manual posterior (auditada).
@@ -415,8 +420,10 @@ Transmisión en vivo de asambleas híbridas con registro legal de participación
 ### CU-03 — Asamblea Digital
 1. Governance crea evento con roles firmantes.  
 2. Identity genera QR firmado para acceso.  
-3. Compliance valida legalidad.  
+3. Compliance valida legalidad.
+- Si Compliance no está disponible, se usa el cache de políticas (para operaciones no críticas) o se activa el modo de emergencia (para operaciones críticas).  
 4. Streaming registra asistencia y votos.
+5. (Modo de emergencia) Posterior a la asamblea, se debe realizar la validación de cumplimiento por parte del Compliance-Service y, en caso de irregularidades, se notifica a los participantes y se toman las acciones correctivas necesarias, registrándose todo en WORM.
 
 ---
 
@@ -431,6 +438,27 @@ Transmisión en vivo de asambleas híbridas con registro legal de participación
 | Logs WORM | Evidencia inmutable de auditoría. |
 | GDPR / LGPD / eIDAS | Cumplimiento normativo multinacional. |
 
+### 6.1. Estrategia de Caching y Resiliencia
+ 
+| Capa | Tecnología | TTL | Invalidadción |
+|------|------------|-----|---------------|
+| **Policy Cache** | Redis Cluster | 5 min | Eventos Kafka + Webhook |
+| **JWKS Cache** | Redis Regional | 1 hora | Rotación programada |
+| **User Context** | Local Memory | 10 min | Session refresh |
+| **QR Pre-compute** | Redis + Local | 24h | Event cancellation |
+
+**Circuit Breaker Patterns**:
+- Compliance Service: 3 failures → open → 30s timeout → half-open
+- Identity Service: 5 failures → open → 60s timeout → half-open  
+- Tenancy Service: 2 failures → open → 15s timeout → half-open
+
+Para garantizar la disponibilidad y robustez del sistema, se implementan las siguientes estrategias:
+- **Reintentos con backoff exponencial**: Para manejar errores transitorios.
+- **Cache de políticas**: Los servicios que dependen del Compliance-Service mantienen un cache local de políticas con TTL corto (5 minutos) para operaciones no críticas.
+- **Modo de emergencia**: Para operaciones críticas, cuando el Compliance-Service no está disponible, se permite un modo de emergencia que requiere validación posterior y queda registrado en WORM.
+- **Timeouts y fallas rápidas**: Todas las llamadas interservicios tienen timeouts configurados para evitar bloqueos.
+- **Monitorización y alertas**: Se monitoriza la salud de todos los servicios y se alerta cuando un servicio está en estado degradado.
+
 ---
 
 ## 📊 7. Métricas Clave
@@ -442,7 +470,11 @@ Transmisión en vivo de asambleas híbridas con registro legal de participación
 | Tiempo revocación sesión | ≤ 30 s |
 | Cumplimiento auditorías | 100% |
 | Adopción WebAuthn | ≥ 80% |
-
+| **SLO Compliance Service** | ≤ 2s latency, ≥99.9% uptime |
+| **Cache Hit Rate Policies** | ≥ 90% |
+| **Error Rate Cross-Service** | ≤ 1% |
+| **Time to Recovery (TTR)** | ≤ 5 minutos |
+| **Circuit Breaker Events** | ≤ 2 por día por servicio |
 ---
 
 ## 🗓️ 8. Roadmap Estratégico
@@ -517,6 +549,7 @@ gantt
 | 5      | `SRV-3012`    | **Compliance-Service (Básico)**               | Validación legal runtime y políticas DSAR.                             |
 | 5      | `ADR-004`     | **Firma de bundles OPA**                      | Seguridad de políticas firmadas distribuidas.                          |
 | 5      | `THM-001`     | **Threat Model STRIDE/LINDDUN**               | Evaluación de riesgos y mitigaciones por servicio.                     |
+| 5      | `RES-001`     | **Estrategia de Resiliencia**                 | Circuit breakers, cache de políticas y modo de emergencia.             |
 | QA     | `DOC-CORE-QA` | **Reporte QA Integrado F1**                   | Pruebas integradas Identity ↔ Profiles ↔ Tenancy ↔ Compliance.         |
 
 ---
