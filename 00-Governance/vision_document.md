@@ -327,8 +327,22 @@ El TS actúa como la **“raíz de confianza organizacional”**, asegurando que
 En resumen, es el fundamento que permite a SmartEdify escalar globalmente mientras mantiene **aislamiento seguro, trazabilidad legal y gobernanza contextual** en entornos multi-condominio y multi-jurisdicción.
 
 ### 4.4. `Governance-Service` (3011)
-Gestión de asambleas, actas, quórum, votaciones, mandatos y resoluciones con respaldo jurídico.  
-Integrado con Compliance para validación legal en tiempo de ejecución.
+
+El **`Governance-Service`** es el núcleo de **gobernanza digital** de SmartEdify. Orquesta todo el ciclo de vida de las decisiones comunitarias —desde la convocatoria hasta la publicación del acta— con **validez jurídica, trazabilidad inmutable y cumplimiento en tiempo real**.
+
+Sus funciones esenciales incluyen:
+
+- **Gestión de asambleas**: creación de agendas, envío de convocatorias y control de plazos, validados contra políticas del **Compliance Service**.
+- **Verificación de asistencia**: mediante **QR jurídicos efímeros** emitidos por *Identity Service*, validados criptográficamente (COSE/JWS + DPoP).
+- **Cálculo automático de quórum y votaciones**: usando datos de *Tenancy* (estructura del condominio) y *User Profiles* (roles, ponderaciones, cargos oficiales).
+- **Generación de actas con respaldo legal**: firmadas **solo por cargos válidos** (presidente, secretario, etc.), almacenadas en *Documents* con **WORM** y accesibles mediante verificación pública segura.
+- **Integración con Streaming**: para registrar participación en sesiones híbridas con timestamps certificados.
+
+Opera bajo límites claros: **no gestiona identidad, roles, finanzas ni almacenamiento de documentos**, sino que se integra con los servicios especializados correspondientes.
+
+Se apoya en **eventos asíncronos (Kafka)**, **políticas dinámicas (Compliance)** y **controles de seguridad estrictos (DPoP, JWKS, PBAC)** para garantizar que cada decisión sea **procesalmente correcta, auditada y legalmente defendible**.
+
+En resumen, el Governance Service transforma la gobernanza condominial tradicional en un **proceso digital, seguro, transparente y normativamente robusto**.
 
 ### 4.5. `Compliance-Service` (3012)
 Valida políticas legales, roles vigentes y parámetros normativos.  
