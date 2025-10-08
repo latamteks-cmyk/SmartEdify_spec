@@ -16,9 +16,17 @@
 
 ## 🧭 1. Visión General
 
-SmartEdify es una plataforma integral para la gestión de comunidades y condominios bajo un modelo SaaS multi-tenant, diseñada con un enfoque mobile-first, modular y orientada al cumplimiento normativo transnacional.  
-Su objetivo es digitalizar la gobernanza, administración, seguridad y servicios comunes, garantizando trazabilidad, seguridad jurídica y experiencia de usuario unificada.
-
+SmartEdify es una plataforma SaaS multi-tenant diseñada para la gestión integral de comunidades y condominios, con enfoque mobile-first, Zero Trust, cumplimiento normativo transnacional y observabilidad end-to-end.
+Su propósito es transformar la gobernanza, administración, seguridad y prestación de servicios comunes en entornos residenciales y comerciales mediante una solución digital unificada, segura y escalable.
+La visión estratégica se centra en convertir a SmartEdify en el sistema operativo digital para comunidades, garantizando:
+Transparencia operativa con trazabilidad inmutable (logs WORM, firma electrónica y actas con respaldo jurídico).
+Cumplimiento legal adaptativo mediante un Compliance Service que valida en tiempo real regulaciones locales e internacionales (GDPR, LGPD, eIDAS, SUNAT, etc.).
+Participación comunitaria inteligente, con asambleas digitales híbridas, votaciones seguras y reservas automatizadas.
+Experiencia de usuario unificada para propietarios, administradores, trabajadores y auditores, accesible por web y móvil.
+Cada tenant puede administrar múltiples condominios, con reglas de cumplimiento y políticas jurídicas independientes.
+La arquitectura se basa en microservicios modulares bajo principios de Clean Architecture, API-First y Privacy by Design, priorizando resiliencia, seguridad criptográfica (WebAuthn, DPoP, ES256/EdDSA), eficiencia en costos y despliegue multi-región.
+SmartEdify no solo digitaliza la gestión condominial, sino que redefine la gobernanza comunitaria con estándares de seguridad, legalidad y usabilidad comparables a las infraestructuras críticas modernas.
+En su madurez plena, cada acción dentro de SmartEdify será auditable, legalmente defendible y medible en términos de confianza, eficiencia y cumplimiento.
 
 ---
 
