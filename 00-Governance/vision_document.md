@@ -459,9 +459,96 @@ gantt
 | **F3: Finance & Payroll**             | Módulos contables y laborales.                         | Finance (3007), Payroll (3008), HR Compliance (3009)                            | Integración fiscal, cálculos multijurisdiccionales. |
 | **F4: Business & Observability**      | Inteligencia operativa y ecosistema comercial.         | Marketplace (3015), Analytics (3016), Observabilidad (Prometheus/Grafana)       | KPIs, dashboards, monitoreo global.                 |
 | **F5: Stabilization & Release**       | Hardening, optimización y certificaciones.             | Todos los anteriores                                                            | Auditorías, cumplimiento, RC y despliegue global.   |
+---
+
+**listado detallado de artefactos por sprint**, estructurado según las fases del roadmap de SmartEdify, incorporando **entregables codificados**, su tipo y propósito según las buenas prácticas de ingeniería de software y DevOps.
+
+## 🧱 **Fase 1 — Core Backbone (Autenticación, Perfiles, Tenants, Compliance)**
+
+| Sprint | Código        | Artefacto                                     | Descripción                                                            |
+| ------ | ------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
+| 1      | `DOC-001`     | **Documento de Arquitectura Global (SAD.md)** | Estructura base del sistema, capas, dependencias y topología.          |
+| 1      | `ADR-001`     | **Arquitectura de Identidad Distribuida**     | Define la adopción de OIDC/OAuth2 + WebAuthn + DPoP.                   |
+| 2      | `SRV-3001`    | **Identity-Service**                          | Implementación del microservicio de autenticación y gestión de tokens. |
+| 2      | `API-001`     | **OpenAPI Identity 3.1**                      | Especificación completa de endpoints, scopes, claims y flujos.         |
+| 2      | `DBML-001`    | **Modelo DB Identity**                        | Estructura DB de usuarios, sesiones, revocaciones, claves y JWKS.      |
+| 3      | `SRV-3002`    | **User-Profiles-Service**                     | Gestión de roles, relaciones, consentimientos y delegaciones.          |
+| 3      | `API-002`     | **OpenAPI Profiles 3.1**                      | Definición de endpoints CRUD, consentimientos y delegaciones.          |
+| 3      | `ADR-002`     | **Recuperación de Passkeys y manejo de MFA**  | Estrategia de recuperación segura y antifraude.                        |
+| 4      | `SRV-3003`    | **Tenancy-Service**                           | Definición jerárquica Tenant → Condominio → Unidad → Espacio.          |
+| 4      | `DBML-002`    | **Modelo DB Tenancy**                         | Estructura organizacional y relaciones con perfiles.                   |
+| 5      | `SRV-3012`    | **Compliance-Service (Básico)**               | Validación legal runtime y políticas DSAR.                             |
+| 5      | `ADR-004`     | **Firma de bundles OPA**                      | Seguridad de políticas firmadas distribuidas.                          |
+| 5      | `THM-001`     | **Threat Model STRIDE/LINDDUN**               | Evaluación de riesgos y mitigaciones por servicio.                     |
+| QA     | `DOC-CORE-QA` | **Reporte QA Integrado F1**                   | Pruebas integradas Identity ↔ Profiles ↔ Tenancy ↔ Compliance.         |
 
 ---
 
+## ⚙️ **Fase 2 — Governance & Operations (PMV)**
+
+| Sprint | Código        | Artefacto                           | Descripción                                                         |
+| ------ | ------------- | ----------------------------------- | ------------------------------------------------------------------- |
+| 6      | `SRV-3011`    | **Governance-Service**              | Gestión de asambleas, actas, votaciones híbridas y cargos.          |
+| 6      | `DOC-LEG-001` | **Modelo de Acta Electrónica**      | Estructura legal y técnica de actas firmadas digitalmente.          |
+| 7      | `SRV-3013`    | **Reservations-Service**            | Gestión de reservas y control de acceso híbrido (QR, contexto).     |
+| 7      | `API-003`     | **OpenAPI Reservations 3.1**        | Especificación de flujos de reservas, QR y validaciones.            |
+| 8      | `SRV-3010`    | **Asset-Management-Service**        | Control de activos, incidencias, inspecciones y órdenes de trabajo. |
+| 8      | `DBML-003`    | **Modelo DB Activos e Incidencias** | Tablas de activos, categorías, incidencias y bitácoras.             |
+| 9      | `SRV-3005`    | **Notifications-Service**           | Motor multicanal para notificaciones (correo, móvil, push).         |
+| 9      | `ADR-007`     | **Estrategia de colas Kafka/Redis** | Manejo distribuido de eventos asincrónicos.                         |
+| QA     | `DOC-QA-PMV`  | **Reporte QA PMV**                  | Validación funcional y legal de flujos de asambleas y reservas.     |
+
+---
+
+## 💰 **Fase 3 — Finance & Payroll**
+
+| Sprint | Código       | Artefacto                                  | Descripción                                                  |
+| ------ | ------------ | ------------------------------------------ | ------------------------------------------------------------ |
+| 10     | `SRV-3007`   | **Finance-Service**                        | Contabilidad, gastos, presupuestos y conciliaciones.         |
+| 10     | `DBML-004`   | **Modelo DB Financiero**                   | Tablas de cuentas, movimientos, presupuestos y reportes.     |
+| 11     | `SRV-3008`   | **Payroll-Service**                        | Gestión de nóminas, deducciones, beneficios y pagos legales. |
+| 11     | `API-004`    | **OpenAPI Payroll 3.1**                    | Endpoints para nóminas y reportes fiscales.                  |
+| 12     | `SRV-3009`   | **HR-Compliance-Service**                  | Validación de cumplimiento laboral y reportes regulatorios.  |
+| 12     | `ADR-009`    | **Integración fiscal y APIs regulatorias** | Estrategia de conexión con SUNAT, IVSS, SII, DIAN.           |
+| QA     | `DOC-QA-FIN` | **Reporte QA Finance/Payroll**             | Validación contable y pruebas de auditoría cruzada.          |
+
+---
+
+## 📊 **Fase 4 — Business & Observabilidad Avanzada**
+
+| Sprint | Código       | Artefacto                                              | Descripción                                              |
+| ------ | ------------ | ------------------------------------------------------ | -------------------------------------------------------- |
+| 13     | `SRV-3016`   | **Analytics-Service**                                  | Consolidación de métricas y KPIs de gestión condominial. |
+| 13     | `DBML-005`   | **Modelo DB Analytics**                                | Estructura de métricas, agregaciones y eventos.          |
+| 14     | `SRV-3015`   | **Marketplace-Service**                                | Integración de proveedores y contratación digital.       |
+| 14     | `API-005`    | **OpenAPI Marketplace 3.1**                            | Endpoints para catálogos y órdenes de servicio.          |
+| 15     | `OBS-001`    | **Observabilidad Extendida (Grafana/Prometheus/OTel)** | Monitoreo integral con métricas de SLOs.                 |
+| 15     | `THM-002`    | **Threat Model Extended**                              | Validación de nuevos riesgos de analítica y marketplace. |
+| QA     | `DOC-QA-BIZ` | **Reporte QA Observabilidad/Business**                 | Pruebas de resiliencia y telemetría integral.            |
+
+---
+
+## 🚀 **Fase 5 — Stabilization & Release**
+
+| Sprint | Código         | Artefacto                           | Descripción                                               |
+| ------ | -------------- | ----------------------------------- | --------------------------------------------------------- |
+| 16     | `DOC-HARD-001` | **Guía de Hardening**               | Checklist de seguridad, rotación de claves y resiliencia. |
+| 16     | `DOC-COST-001` | **Plan de Optimización de Costos**  | Estrategia de reducción de consumo y escalado.            |
+| 17     | `AUD-001`      | **Auditoría Final de Cumplimiento** | Certificación ISO 27001 / SOC 2.                          |
+| 17     | `REL-001`      | **Release Candidate RC-1**          | Versión final de producción auditada y validada.          |
+| RC     | `REL-002`      | **Go Live SmartEdify v4.0**         | Entrega global con observabilidad y monitoreo.            |
+
+---
+
+### 🧭 **Notas Estratégicas**
+
+* Cada artefacto con prefijo `SRV-` implica código fuente, contenedores y documentación técnica.
+* Los `ADR-` establecen decisiones arquitectónicas verificadas en revisiones CTO/DevSec.
+* Los `DBML-` y `API-` conforman los componentes estructurales y de interoperabilidad.
+* Los `THM-` y `DOC-QA-` soportan auditorías y aseguramiento de calidad.
+* Los **milestones (M#)** están alineados con los hitos de validación integradora y certificación.
+
+---
 ## 🧩 9. Relación entre Microservicios y Dominios
 
 | Dominio | Servicios Asociados |
