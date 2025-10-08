@@ -19,7 +19,7 @@
 SmartEdify es una plataforma SaaS multi-tenant diseñada para la gestión integral de comunidades y condominios, con enfoque mobile-first, Zero Trust, cumplimiento normativo transnacional y observabilidad end-to-end.
 Su propósito es **transformar la gobernanza, administración, seguridad y prestación de servicios comunes en entornos residenciales y comerciales mediante una solución digital unificada, segura y escalable.**
 La visión estratégica se centra en convertir a SmartEdify en el sistema operativo digital para comunidades, garantizando:
-Transparencia operativa con trazabilidad inmutable (logs WORM, firma electrónica y actas con respaldo jurídico).
+Transparencia operativa con trazabilidad inmutable (logs WORM, firma electrónica avanzada (con respaldo criptográfico y vinculación a cargos oficiales) y actas con respaldo jurídico).
 Cumplimiento legal adaptativo mediante un `Compliance-Service` que valida en tiempo real regulaciones locales e internacionales (GDPR, LGPD, eIDAS, SUNAT, etc.).
 Participación comunitaria inteligente, con asambleas digitales híbridas, votaciones seguras y reservas automatizadas.
 Experiencia de usuario unificada para propietarios, administradores, trabajadores y auditores, accesible por web y móvil.
@@ -311,6 +311,7 @@ Sus funciones clave incluyen:
 - **Registro y auditoría de consentimientos** para cumplir con normativas como **GDPR, LGPD** y leyes locales de Latinoamérica.
 Se integra estrechamente con `Identity-Service`, `Tenancy-Service`, `Governance-Service` y `Compliance-Service`, asegurando que toda acción en la plataforma —votar, firmar, reservar, gestionar activos— se realice desde un **contexto legal y organizacional válido**.
 En esencia, el UPS es el **puente entre la identidad digital y la gobernanza comunitaria**, garantizando coherencia, trazabilidad y cumplimiento en entornos multi-tenant y multi-jurisdicción.
+El modelo de datos incluye una tabla de membresías explícita (memberships) que vincula user_id con múltiples condominium_id y unit_id bajo un mismo tenant_id, garantizando aislamiento mediante RLS y coherencia organizacional.
 
 ### 4.3. `Tenancy-Service` (3003)
 
@@ -337,6 +338,7 @@ Sus funciones esenciales incluyen:
 - **Integración con Streaming**: para registrar participación en sesiones híbridas con timestamps certificados. Integración con `Streaming-Service` para registrar participación en sesiones híbridas con timestamps certificados y correlación criptográfica con la identidad verificada. El Streaming Service actúa como fuente única de verdad para la asistencia en tiempo real, independientemente del canal de transmisión utilizado (de terceros). Las integraciones con plataformas externas de video se tratan como adaptadores de experiencia de usuario, sin impacto en la validez jurídica de la evidencia generada
 Opera bajo límites claros: **no gestiona identidad, roles, finanzas ni almacenamiento de documentos**, sino que se integra con los servicios especializados correspondientes.
 Se apoya en **eventos asíncronos (Kafka)**, **políticas dinámicas (Compliance)** y **controles de seguridad estrictos (DPoP, JWKS, PBAC)** para garantizar que cada decisión sea **procesalmente correcta, auditada y legalmente defendible**.
+Todas las validaciones normativas se realizan en modo fail-closed: si el Compliance-Service no responde o devuelve un error, la operación (convocatoria, votación, publicación de acta) se deniega inmediatamente para preservar la integridad legal del proceso. 
 En resumen, el `Governance-Service` transforma la gobernanza condominial tradicional en un **proceso digital, seguro, transparente y normativamente robusto**.
 
 ### 4.5. `Compliance-Service` (3012)
@@ -363,7 +365,7 @@ Validación de cumplimiento laboral, contratos y normativas por país. Monitoreo
 Orquestador de notificaciones push, correo y mensajería interna por tenant.
 
 ### 4.12. `Documents-Service` (3006)
-Gestión documental con firma electrónica, versionado, cifrado y almacenamiento WORM.  
+Gestión documental con firma electrónica avanzada, aplicable únicamente a documentos con requerimientos legales (actas, resoluciones). La firma se vincula a cargos oficiales vigentes (presidente, secretario, etc.) validados por User Profiles y Compliance, y se respalda con hash-chain y almacenamiento WORM, versionado, cifrado y almacenamiento WORM.  
 Firma válida solo en documentos con requerimientos legales.
 
 ### 4.13. `Streaming-Service` (3014)
