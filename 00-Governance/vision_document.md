@@ -7,10 +7,10 @@
     style="display: block; margin: 0 auto;"
   />
   <p class="brand-name">
-    <span class="brand-blue">Smart</span>
+    <span style: color: blue>Smart</span>
     <span class="brand-orange">Edify</span>
   </p>
-  <h3 class="tagline">Gestión integral de condominios</h3>
+  <h3 style: color: orange>Gestión integral de condominios</h3>
 </div>
 
 ---
