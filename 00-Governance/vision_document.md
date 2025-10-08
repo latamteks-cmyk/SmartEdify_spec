@@ -1,6 +1,6 @@
 <div align="center">
     <img src="../Branding/Logo_smartedify.jpg"/>
-    <h1>🌱 Spec Kit</h1>
+    <h1>Smart</h1><h1>Edify</h1>
     <h3><em>Build high-quality software faster.</em></h3>
 </div>
 
