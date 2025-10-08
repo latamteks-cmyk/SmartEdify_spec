@@ -6,7 +6,7 @@
 ---
 # 📘 Documento de Visión — SmartEdify
 
-**Versión:** 1.1  
+**Versión:** 0  
 **Fecha:** 2025-10-08  
 **Estado:** Aprobado  
 **Autor:** Equipo de Producto y Arquitectura SmartEdify  
