@@ -301,8 +301,16 @@ Se integra estrechamente con `Compliance-service`, `Governance-Service`, `User-P
 
 Sus métricas clave incluyen **≥99.95% de disponibilidad**, **<3s de latencia en autenticación** y **revocación global en ≤60s**, garantizando seguridad, usabilidad y cumplimiento al más alto nivel. En esencia, es el **fundamento de confianza digital** sobre el que se construye toda la gobernanza comunitaria en SmartEdify.
 
-### 4.2. User Profiles (3002)
-Gestión de atributos, roles, relaciones jerárquicas y asociaciones con tenants y unidades residenciales.
+### 4.2. `User-Profiles-Service` (3002)
+
+El **User Profiles Service (UPS)** es el microservicio que gestiona la **identidad funcional y relacional** de los usuarios en SmartEdify, complementando al `Identity-Service` con información contextual, jerárquica y normativa. Actúa como la **capa organizacional** que vincula a cada usuario con sus roles, unidades, condominios y tenants.
+Sus funciones clave incluyen:
+- **Gestión de atributos no sensibles** (nombre, preferencias, idioma) y **protección criptográfica de PII** (como DNI).
+- **Asignación de roles y cargos oficiales** (`ADMIN`, `BOARD_MEMBER`, etc.), con soporte para **delegaciones temporales** y **grupos funcionales**.
+- **Modelado jerárquico** `usuario → unidad → condominio → tenant`, con aislamiento garantizado mediante **Row-Level Security (RLS)**.
+- **Registro y auditoría de consentimientos** para cumplir con normativas como **GDPR, LGPD** y leyes locales de Latinoamérica.
+Se integra estrechamente con `Identity-Service`, `Tenancy-Service`, `Governance-Service` y `Compliance-Service`, asegurando que toda acción en la plataforma —votar, firmar, reservar, gestionar activos— se realice desde un **contexto legal y organizacional válido**.
+En esencia, el UPS es el **puente entre la identidad digital y la gobernanza comunitaria**, garantizando coherencia, trazabilidad y cumplimiento en entornos multi-tenant y multi-jurisdicción.
 
 ### 4.3. Tenancy Service (3003)
 Define condominios, unidades, espacios y relación entre tenants y jurisdicciones legales.  
