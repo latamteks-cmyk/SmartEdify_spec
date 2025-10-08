@@ -11,7 +11,7 @@
 </style>
 
 <div align="center">
-    <img src="../branding/Logo_smartedify.jpg" width="100" height="100" alt="Logo SmartEdify" />
+    <img src="../Branding/Logo_smartedify.jpg" width="300" height="300" alt="Logo SmartEdify" />
     <p>
         <span class="brand-highlight brand-blue">Smart</span>
         <span class="brand-highlight brand-orange">Edify</span>
