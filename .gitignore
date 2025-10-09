@@ -1,0 +1,47 @@
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos de caché y logs
+*.log
+.cache/
+.tmp/
+
+# Archivos de configuración local
+.env
+.env.local
+.env.*.local
+
+# Dependencias de Node.js (si las hay)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de construcción
+dist/
+build/
+target/
+
+# Archivos específicos del editor
+.qwen/
+
+# Archivos de backup
+*.bak
+*.backup
+*.orig
+
+# Archivos de certificados y claves (por seguridad)
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Archivos temporales de Office
+~$*

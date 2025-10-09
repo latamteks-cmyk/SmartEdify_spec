@@ -1,0 +1,142 @@
+Table users {
+  id uuid [pk, unique, note: 'Unique identifier for the user']
+  external_id varchar [unique, note: 'External identifier (username, email, etc.)']
+  display_name varchar [note: 'User display name']
+  tenant_id uuid [note: 'Tenant this user belongs to']
+  condominium_id uuid [note: 'Condominium this user is associated with (optional)']
+  is_active boolean [default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  last_login_at timestamp [note: 'Timestamp of last successful login']
+  
+  indexes {
+    (tenant_id, condominium_id) [name: 'idx_user_tenant_condo']
+    external_id [name: 'idx_user_external_id']
+  }
+  
+  note: 'Main users table with tenant and condominium context'
+}
+
+Table user_credentials {
+  id uuid [pk, unique]
+  user_id uuid [ref: > users.id, unique: true]
+  credential_id varchar [unique, note: 'WebAuthn credential ID']
+  public_key jsonb [note: 'Public key information for WebAuthn']
+  attestation_type varchar [note: 'Type of attestation (e.g., packed, fido-u2f)']
+  transport varchar [] [note: 'Transport method (e.g., usb, nfc, ble)']
+  backup_eligibility boolean [default: false, note: 'Whether credential can be backed up']
+  backup_state boolean [default: false, note: 'Whether credential is currently backed up']
+  device_name varchar [note: 'Name of the authenticator device']
+  created_at timestamp [default: `now()`]
+  last_used_at timestamp [note: 'When this credential was last used']
+  
+  indexes {
+    credential_id [name: 'idx_credential_id']
+    user_id [name: 'idx_user_id']
+  }
+  
+  note: 'Stores WebAuthn credentials for users'
+}
+
+Table sessions {
+  id uuid [pk, unique]
+  user_id uuid [ref: > users.id]
+  device_info jsonb [note: 'Information about the device used for authentication']
+  ip_address inet [note: 'IP address of the session']
+  user_agent varchar [note: 'User agent string']
+  created_at timestamp [default: `now()`]
+  expires_at timestamp [note: 'When session expires']
+  revoked_at timestamp [note: 'When session was revoked (null if active)']
+  
+  indexes {
+    user_id [name: 'idx_session_user']
+    (user_id, expires_at) [name: 'idx_user_expires']
+    ip_address [name: 'idx_session_ip']
+  }
+  
+  note: 'User sessions with device and IP information'
+}
+
+Table dpop_nonces {
+  id uuid [pk, unique]
+  nonce varchar [unique, note: 'DPoP nonce value']
+  created_at timestamp [default: `now()`]
+  expires_at timestamp [note: 'When nonce expires (prevent replay)']
+  
+  indexes {
+    nonce [name: 'idx_dpop_nonce']
+  }
+  
+  note: 'Track DPoP nonces to prevent replay attacks'
+}
+
+Table jwks_cache {
+  id uuid [pk, unique]
+  key_id varchar [unique, note: 'Key identifier in JWK Set']
+  jwk jsonb [note: 'JSON Web Key']
+  issuer varchar [note: 'Issuer of the JWK']
+  created_at timestamp [default: `now()`]
+  expires_at timestamp [note: 'When this key expires']
+  last_refreshed_at timestamp [default: `now()`]
+  
+  indexes {
+    key_id [name: 'idx_jwk_key_id']
+    issuer [name: 'idx_jwk_issuer']
+  }
+  
+  note: 'Cache for JWKS to optimize token verification'
+}
+
+Table legal_qr_cache {
+  id uuid [pk, unique]
+  event_id uuid [note: 'ID of the event this QR is for']
+  qr_hash varchar [unique, note: 'Hash of the QR content for verification']
+  qr_content jsonb [note: 'Actual QR content (signed JWT, etc.)']
+  tenant_id uuid [note: 'Tenant this QR belongs to']
+  condominium_id uuid [note: 'Condominium this QR belongs to']
+  created_at timestamp [default: `now()`]
+  expires_at timestamp [note: 'When this QR expires']
+  
+  indexes {
+    event_id [name: 'idx_qr_event']
+    qr_hash [name: 'idx_qr_hash']
+    (tenant_id, condominium_id) [name: 'idx_qr_tenant_condo']
+  }
+  
+  note: 'Cache for legal QR codes used in governance events'
+}
+
+Table tenants {
+  id uuid [pk, unique, note: 'Unique identifier for tenant']
+  name varchar [note: 'Display name for the tenant']
+  jurisdiction varchar [note: 'Legal jurisdiction of the tenant']
+  settings jsonb [note: 'Tenant-specific settings']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    name [name: 'idx_tenant_name']
+  }
+  
+  note: 'Tenant information for multi-tenancy'
+}
+
+Table condominiums {
+  id uuid [pk, unique, note: 'Unique identifier for condominium']
+  name varchar [note: 'Display name for the condominium']
+  tenant_id uuid [ref: > tenants.id, unique: false]
+  jurisdiction varchar [note: 'Legal jurisdiction of the condominium']
+  settings jsonb [note: 'Condominium-specific settings']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (tenant_id, id) [name: 'idx_condo_tenant']
+    name [name: 'idx_condo_name']
+  }
+  
+  note: 'Condominium information within a tenant'
+}
+
+Ref: user_credentials.user_id > users.id
+Ref: sessions.user_id > users.id

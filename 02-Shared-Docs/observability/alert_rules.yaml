@@ -1,0 +1,208 @@
+groups:
+  - name: smartedify_global_alerts
+    rules:
+      # Availability Alerts
+      - alert: ServiceDown
+        expr: up{service_name="smartedify"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: infrastructure
+        annotations:
+          summary: "Service {{ $labels.instance }} is down"
+          description: "Service {{ $labels.service_name }} at {{ $labels.instance }} has been down for more than 2 minutes"
+
+      - alert: GlobalAvailabilityBelowSLO
+        expr: 100 * (sum(increase(http_requests_total{status=~"2.."}[24h])) / sum(increase(http_requests_total[24h]))) < 99.95
+        for: 5m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Global availability below SLO"
+          description: "Global availability is {{ $value }}% which is below the SLO of 99.95%"
+
+      # Performance Alerts
+      - alert: AuthenticationLatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service_name="identity-service", path="/v1/auth/webauthn/login"}[5m])) > bool 3
+        for: 5m
+        labels:
+          severity: high
+          category: performance
+        annotations:
+          summary: "Authentication latency is high"
+          description: "P95 authentication latency is {{ $value }} seconds which exceeds the 3s threshold"
+
+      - alert: SessionRevocationSlow
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service_name="identity-service", path=~"/v1/users/.*/sessions/.*/revoke"}[5m]))) > 30
+        for: 5m
+        labels:
+          severity: high
+          category: performance
+        annotations:
+          summary: "Session revocation taking too long"
+          description: "P95 session revocation time is {{ $value }} seconds which exceeds the 30s threshold"
+
+      # Error Rate Alerts
+      - alert: HighErrorRate
+        expr: (sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) > 0.01
+        for: 5m
+        labels:
+          severity: high
+          category: errors
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} which exceeds 1% threshold"
+
+      - alert: AuthFailureRateHigh
+        expr: (sum(rate(http_requests_total{status=~"4..", path=~"/v1/auth/.*"}[5m])) / sum(increase(http_requests_total{path=~"/v1/auth/.*"}[5m]))) > 0.10
+        for: 5m
+        labels:
+          severity: high
+          category: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is {{ $value }} which may indicate a security issue"
+
+      # Resource Utilization Alerts
+      - alert: HighCPUUsage
+        expr: 100 * (avg by(instance) (irate(process_cpu_seconds_total[5m]))) > 90
+        for: 10m
+        labels:
+          severity: medium
+          category: infrastructure
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% which exceeds 90% threshold"
+
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes / container_memory_limit_bytes) * 100 > 90
+        for: 10m
+        labels:
+          severity: medium
+          category: infrastructure
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}% which exceeds 90% threshold"
+
+  - name: smartedify_security_alerts
+    rules:
+      # Security Alerts
+      - alert: DPoPNonceReplayDetected
+        expr: increase(dpop_nonce_replay_attempts_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "DPoP nonce replay attempt detected"
+          description: "A DPoP nonce replay attempt was detected, possible token replay attack"
+
+      - alert: UnusualLoginPattern
+        expr: (sum by(user_id) (increase(identity_authentications_total[1h]))) > 10
+        for: 0m
+        labels:
+          severity: high
+          category: security
+        annotations:
+          summary: "Unusual login pattern for user {{ $labels.user_id }}"
+          description: "User {{ $labels.user_id }} has had {{ $value }} authentication attempts in the last hour"
+
+      - alert: DataIsolationViolation
+        expr: increase(tenancy_data_isolation_violations_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Data isolation violation detected"
+          description: "A data isolation violation was detected between tenants"
+
+  - name: smartedify_compliance_alerts
+    rules:
+      # Compliance Alerts
+      - alert: ComplianceServiceLatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service_name="compliance-service"}[5m]))) > 2
+        for: 5m
+        labels:
+          severity: high
+          category: compliance
+        annotations:
+          summary: "Compliance service latency high"
+          description: "P95 compliance service latency is {{ $value }} seconds which exceeds the 2s threshold"
+
+      - alert: ComplianceUptimeBelowSLO
+        expr: avg_over_time(up{service_name="compliance-service"}[24h]) * 100 < 99.9
+        for: 0m
+        labels:
+          severity: high
+          category: compliance
+        annotations:
+          summary: "Compliance service uptime below SLO"
+          description: "Compliance service uptime is {{ $value }}% which is below the 99.9% SLO"
+
+      - alert: PolicyCacheHitRateLow
+        expr: (compliance_policy_cache_hits_total / (compliance_policy_cache_hits_total + compliance_policy_cache_misses_total)) * 100 < 90
+        for: 10m
+        labels:
+          severity: medium
+          category: compliance
+        annotations:
+          summary: "Policy cache hit rate low"
+          description: "Policy cache hit rate is {{ $value }}% which is below 90% threshold"
+
+      - alert: EmergencyModeActivated
+        expr: increase(compliance_emergency_mode_activations_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: medium
+          category: compliance
+        annotations:
+          summary: "Compliance service emergency mode activated"
+          description: "Compliance service emergency mode was activated {{ $value }} times in the last 5 minutes"
+
+  - name: smartedify_governance_alerts
+    rules:
+      # Governance Alerts
+      - alert: LegalQRGenerationSlow
+        expr: histogram_quantile(0.95, sum(rate(identity_qr_generation_seconds_bucket[5m]))) > 0.5
+        for: 5m
+        labels:
+          severity: high
+          category: governance
+        annotations:
+          summary: "Legal QR generation slow"
+          description: "P95 legal QR generation time is {{ $value }} seconds which exceeds 500ms threshold"
+
+      - alert: AssemblyAttendanceLow
+        expr: (governance_participants_count / governance_invitations_sent) < 0.1
+        for: 0m
+        labels:
+          severity: medium
+          category: governance
+        annotations:
+          summary: "Assembly attendance low"
+          description: "Assembly attendance is {{ $value }}% which is below 10% threshold"
+
+  - name: smartedify_error_budget_alerts
+    rules:
+      # Error Budget Alerts
+      - alert: ErrorBudgetApproaching
+        expr: error_budget_remaining_percent < 20
+        for: 5m
+        labels:
+          severity: medium
+          category: sre
+        annotations:
+          summary: "Error budget approaching exhaustion"
+          description: "Remaining error budget is {{ $value }}% which is below 20% threshold"
+
+      - alert: ErrorBudgetExceeded
+        expr: error_budget_remaining_percent < 0
+        for: 5m
+        labels:
+          severity: critical
+          category: sre
+        annotations:
+          summary: "Error budget exceeded"
+          description: "Error budget is negative at {{ $value }}% indicating SLO failure"

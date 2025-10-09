@@ -1,0 +1,397 @@
+openapi: 3.1.0
+info:
+  title: Identity Service API
+  description: SmartEdify Identity Service - Central authority for identity management with Zero Trust, WebAuthn, and DPoP support.
+  version: 1.0.0
+  contact:
+    name: SmartEdify Architecture Team
+    email: architecture@smartedify.global
+
+servers:
+  - url: https://api.smartedify.global/identity
+    description: Production server
+  - url: https://preprod.api.smartedify.global/identity
+    description: Pre-production server
+
+tags:
+  - name: authentication
+    description: Authentication endpoints
+  - name: registration
+    description: Registration endpoints
+  - name: sessions
+    description: Session management endpoints
+  - name: keys
+    description: Key management endpoints
+
+paths:
+  /v1/auth/webauthn/register:
+    post:
+      tags:
+        - authentication
+      summary: Initiate WebAuthn registration
+      description: Start the WebAuthn registration process for a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebAuthnRegistrationRequest'
+      responses:
+        '200':
+          description: Registration options generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebAuthnRegistrationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  
+  /v1/auth/webauthn/register/verify:
+    post:
+      tags:
+        - authentication
+      summary: Complete WebAuthn registration
+      description: Complete the WebAuthn registration with attestation response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebAuthnAttestationResponse'
+      responses:
+        '200':
+          description: Registration completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebAuthnRegistrationResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  
+  /v1/auth/webauthn/login:
+    post:
+      tags:
+        - authentication
+      summary: Initiate WebAuthn login
+      description: Start the WebAuthn login process for a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebAuthnLoginRequest'
+      responses:
+        '200':
+          description: Authentication options generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebAuthnAuthenticationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  
+  /v1/auth/dpop:
+    post:
+      tags:
+        - authentication
+      summary: Request DPoP-bound access token
+      description: Request an access token with DPoP proof to prevent replay attacks
+      security:
+        - clientCredentials: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DPoPRequest'
+      responses:
+        '200':
+          description: DPoP-bound access token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DPoPTokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  
+  /v1/users/{userId}/sessions:
+    get:
+      tags:
+        - sessions
+      summary: List active sessions for user
+      description: Retrieve all active sessions for a specific user
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: List of active sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSessionsList'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  
+  /v1/users/{userId}/sessions/{sessionId}/revoke:
+    post:
+      tags:
+        - sessions
+      summary: Revoke a specific session
+      description: Revoke a specific user session
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/SessionId'
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Session revoked successfully
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    clientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /v1/auth/token
+          scopes:
+            identity:read: Read identity information
+            identity:write: Write identity information
+            sessions:manage: Manage sessions
+    
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: Unique identifier for the user
+      schema:
+        type: string
+        format: uuid
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      description: Unique identifier for the session
+      schema:
+        type: string
+        format: uuid
+    TenantId:
+      name: tenantId
+      in: header
+      required: true
+      description: Tenant identifier for multi-tenant context
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    WebAuthnRegistrationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: User's unique identifier (email, username)
+        displayName:
+          type: string
+          description: User's display name
+        tenantId:
+          type: string
+          format: uuid
+          description: Tenant identifier
+        condominiumId:
+          type: string
+          format: uuid
+          description: Condominium identifier (optional, admin use)
+      required:
+        - username
+        - displayName
+        - tenantId
+
+    WebAuthnRegistrationOptions:
+      type: object
+      properties:
+        publicKey:
+          type: object
+          description: WebAuthn public key creation options
+          additionalProperties: true
+
+    WebAuthnAttestationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Credential ID
+        rawId:
+          type: string
+          description: Raw credential ID
+        response:
+          type: object
+          properties:
+            clientDataJSON:
+              type: string
+              description: Client data JSON
+            attestationObject:
+              type: string
+              description: Attestation object
+          required:
+            - clientDataJSON
+            - attestationObject
+        type:
+          type: string
+          description: Credential type
+      required:
+        - id
+        - rawId
+        - response
+        - type
+
+    WebAuthnRegistrationResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether registration was successful
+        credentialId:
+          type: string
+          description: ID of the registered credential
+        message:
+          type: string
+          description: Additional information about the result
+
+    WebAuthnLoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: User's unique identifier
+      required:
+        - username
+
+    WebAuthnAuthenticationOptions:
+      type: object
+      properties:
+        publicKey:
+          type: object
+          description: WebAuthn get options
+          additionalProperties: true
+
+    DPoPRequest:
+      type: object
+      properties:
+        proof:
+          type: string
+          description: DPoP proof JWT
+        htm:
+          type: string
+          description: HTTP method for the request
+        htu:
+          type: string
+          description: HTTP URL for the request
+        nonce:
+          type: string
+          description: DPoP nonce (if required)
+      required:
+        - proof
+        - htm
+        - htu
+
+    DPoPTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: DPoP-bound access token
+        token_type:
+          type: string
+          description: Token type (should be "DPoP")
+        expires_in:
+          type: integer
+          description: Expiration time in seconds
+        refresh_token:
+          type: string
+          description: Refresh token (if applicable)
+        scope:
+          type: string
+          description: Granted scopes
+        dpop_nonce:
+          type: string
+          description: DPoP nonce for future requests
+
+    UserSessionsList:
+      type: array
+      items:
+        $ref: '#/components/schemas/UserSession'
+
+    UserSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Session identifier
+        userId:
+          type: string
+          format: uuid
+          description: User identifier
+        createdAt:
+          type: string
+          format: date-time
+          description: Session creation time
+        expiresAt:
+          type: string
+          format: date-time
+          description: Session expiration time
+        lastAccessedAt:
+          type: string
+          format: date-time
+          description: Last access time
+        deviceInfo:
+          type: string
+          description: Information about the device
+        ipAddress:
+          type: string
+          description: IP address of the session
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Access forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+      required:
+        - error
+        - message
+
+  examples:
+    webauthnRegistrationRequest:
+      summary: Example WebAuthn registration request
+      value:
+        username: "user@example.com"
+        displayName: "John Doe"
+        tenantId: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+
+security:
+  - clientCredentials: []
