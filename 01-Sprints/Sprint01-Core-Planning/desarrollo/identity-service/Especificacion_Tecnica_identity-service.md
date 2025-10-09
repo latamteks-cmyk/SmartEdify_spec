@@ -56,13 +56,13 @@ graph TD
         F4[Guardia App] --> G
     end
     subgraph Gateway
-        G[API Gateway (8080)] --> ID[id-service (3001)]
+        G["API Gateway (8080)"] --> ID[id-service (3001)]
     end
     subgraph Core Dependencies
-        ID --> TS[tenancy-service (3003)] -. Contexto tenant/condo .-> ID
-        ID --> CPLY[compliance-service (3012)] -. Gate Legal en Tiempo de Ejecución .-> ID
-        ID --> UPS[user-profiles (3002)] -. Cargos oficiales .-> ID
-        ID --> GS[governance-service (3011)] -. QR para asambleas .-> ID
+        ID --> TS["tenancy-service (3003)"] -. Contexto tenant/condo .-> ID
+        ID --> CPLY["compliance-service (3012)"] -. Gate Legal en Tiempo de Ejecución .-> ID
+        ID --> UPS["user-profiles (3002)"] -. Cargos oficiales .-> ID
+        ID --> GS["governance-service (3011)"] -. QR para asambleas .-> ID
         ID --> K[Kafka] -. Eventos de Auditoría .-> CPLY
     end
 ```
