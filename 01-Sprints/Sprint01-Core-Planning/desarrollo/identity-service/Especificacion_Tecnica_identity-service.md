@@ -56,7 +56,7 @@ graph TD
         F4[Guardia App] --> G
     end
     subgraph Gateway
-        G["API Gateway (8080)"] --> ID[id-service (3001)]
+        G["API Gateway (8080)"] --> ID[("id-service (3001)")]
     end
     subgraph Core Dependencies
         ID --> TS[("tenancy-service (3003)")] -. Contexto tenant/condo .-> ID
