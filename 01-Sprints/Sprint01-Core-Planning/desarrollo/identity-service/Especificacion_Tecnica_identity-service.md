@@ -247,6 +247,11 @@ CREATE TABLE sessions (
 ## 📈 7. Observabilidad y Monitoreo
 
 ### Métricas Clave (Prometheus)
+### Métricas adicionales
+
+- `qr_identity_validation_error_rate`: tasa de error en validación de QR contextuales
+- `feature_flag_mismatch_detected_total`: detección de flags activos no sincronizados con despliegue
+
 - `auth_latency_seconds{method,region}`
 - `login_success_total{method}`
 - `dpop_replay_denied_total`
@@ -400,3 +405,25 @@ El `identity-service` no es solo un componente técnico: es la **base de confian
 ---  
 © 2025 SmartEdify Global. Todos los derechos reservados.  
 Documento generado conforme a `vision_document.md` (v1.1, 2025-10-08) y ADRs aprobados.
+
+---
+
+## 🧩 14. Gestión de Feature Flags en CI/CD
+
+La validación de feature flags es crítica para evitar inconsistencias entre despliegue y comportamiento esperado.
+
+- Validación automática en pipeline CI/CD antes de cada despliegue.
+- Archivo `feature_flags.md` con definición, estado y contexto de cada flag.
+- Métrica Prometheus: `feature_flag_mismatch_detected_total`
+- Pruebas contractuales para flags críticos (`enable_passkey`, `use_compliance_gate`, etc.)
+- Owner: Tech Lead de cada módulo
+
+
+---
+
+## 🔐 Validación de almacenamiento seguro de tokens en Frontend
+
+- Prohibido el uso de `localStorage` para tokens de acceso y refresh.
+- Recomendado: cookies HTTPOnly o almacenamiento seguro vía BFF.
+- Validación en QA: pruebas de seguridad automatizadas (`frontend-token-storage.spec.ts`)
+- Documentación en runbooks de Frontend (`frontend_security.md`)
