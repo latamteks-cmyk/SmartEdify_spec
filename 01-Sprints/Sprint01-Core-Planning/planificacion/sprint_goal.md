@@ -14,7 +14,7 @@ Al final de este sprint, el equipo tendrá una comprensión inequívoca del "qu�
 
 ### ✅ 2.1 Finalizar y Aprobar Especificaciones Técnicas de Alto Nivel  
 - Revisar y alinear las especificaciones de los tres servicios con:
-  - El **Documento de Visión** ([])
+  - El **Documento de Visión** ([https://github.com/latamteks-cmyk/SmartEdify_spec/blob/b17b372951de34afc1cfb262b3d53bde7f987fb1/00-Governance/vision_document.md])
   - El **Software Architecture Document** (v1.2)
   - Los **ADR aprobados** (ADR-001 a ADR-017)
   - Las **acciones de hardening del CTO** (H-01 a H-07)
