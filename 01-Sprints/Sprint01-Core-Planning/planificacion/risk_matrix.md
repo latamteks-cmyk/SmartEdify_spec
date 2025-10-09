@@ -1,5 +1,4 @@
-# ⚠️ Matriz de Riesgos: Fase 1 – Core Backbone (Actualizada)
-
+# ⚠️ Matriz de Riesgos: Fase 1 – Core Backbone
 Este documento identifica los riesgos más significativos para la planificación y ejecución de la Fase 1 (Core Backbone) y establece estrategias de mitigación alineadas con las acciones del CTO y el backlog técnico.
 
 | ID | Riesgo | Impacto | Probabilidad | Nivel de Riesgo | Estrategia de Mitigación |
