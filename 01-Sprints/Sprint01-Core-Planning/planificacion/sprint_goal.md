@@ -15,7 +15,7 @@ Al final de este sprint, el equipo tendrá una comprensión inequívoca del "qu�
 ### ✅ 2.1 Finalizar y Aprobar Especificaciones Técnicas de Alto Nivel  
 - Revisar y alinear las especificaciones de los tres servicios con:
   - El [Documento de Visión](./00-Governance/vision_document.md)
-  - El **Software Architecture Document** (v1.2)
+  - El [Software Architecture Document](./00-Governance/software_architecture.md)
   - Los **ADR aprobados** (ADR-001 a ADR-017)
   - Las **acciones de hardening del CTO** (H-01 a H-07)
   - Asegurar que cada servicio defina explícitamente:
