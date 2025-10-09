@@ -14,10 +14,14 @@ Este documento identifica los riesgos más significativos para la planificación
 | **R-08** | **Latencia inaceptable en flujos WebAuthn**<br>El P95 de registro/assertion supera los 3s, afectando la experiencia mobile-first. | Medio | Media | Medio | • Medir y reportar `webauthn_registration_latency_p95` y `webauthn_assertion_latency_p95` por plataforma (H-03).<br>• Establecer SLOs diferenciados por iOS/Android/Web.<br>• Optimizar con **pre-generación de claves** y caché local. |
 | **R-09** | **Gestión incorrecta de PII en User Profiles**<br>Atributos sensibles (DNI, etc.) se almacenan en texto claro o sin cifrado por tenant. | Crítico | Baja | Alto | • Aplicar **cifrado con clave KMS por tenant** (UP-10).<br>• Revisar código por **Security Champion** en cada PR que toque PII.<br>• Validar con escáneres estáticos (Snyk, SonarQube). |
 | **R-10** | **Propagación incompleta de contexto de tenant**<br>El `tenant_id` no se inyecta en trazas/logs, impidiendo observabilidad por tenant. | Alto | Media | Alto | • Implementar **interceptor centralizado** que enriquezca contexto OTel (PLT-03).<br>• Validar en CI que todos los spans incluyen `tenant_id` y `condominium_id`.<br>• Incluir en **dashboard de métricas** por tenant. |
+| **R-11** | **🔐 Riesgo de almacenamiento inseguro de tokens en Frontend**<br>Uso de `localStorage` o mecanismos inseguros para almacenar tokens de sesión. | Alto | Media | Alto | • Prohibir `localStorage` para tokens (ya incluido en checklist).<br>• Usar cookies HTTPOnly o almacenamiento seguro vía BFF.<br>• Validar en QA y en revisiones de seguridad. |
+| **R-12** | **📱 Riesgo de lectura incorrecta de QR de identidad**<br>Fallos en la lectura o validación del QR en dispositivos móviles. | Medio | Media | Medio | • Validar TTL de 300s y `kid` en COSE/JWS.<br>• Pruebas E2E en Mobile para lectura y validación.<br>• Métrica: `qr_identity_validation_error_rate`. |
+| **R-13** | **🧩 Riesgo de desalineación entre Feature Flags y despliegue**<br>Flags activados/desactivados incorrectamente en ambientes productivos. | Medio | Alta | Medio | • Validar flags en CI/CD antes de cada despliegue.<br>• Documentar en `feature_flags.md`.<br>• Métrica: `feature_flag_mismatch_detected_total`. |
 
 ---
 
 ## ✅ Notas de Gestión
+- **R-11 a R-13** agregados como parte de la revisión del checklist del Sprint 1.
 
 - **Riesgos R-01 a R-08** están directamente vinculados a las **acciones H-01 a H-07** del CTO Review.
 - **R-09 y R-10** derivan de las **historias técnicas faltantes** identificadas en el análisis del backlog.
