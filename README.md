@@ -1,7 +1,7 @@
 # SmartEdify
 
 <div align="center">
-  <img src="../branding/Logo_smartedify.jpg" width="200" height="200" alt="Logo SmartEdify" />
+  <img src="branding/Logo_smartedify.jpg" width="200" height="200" alt="Logo SmartEdify" />
   <p><em>Construyendo infraestructura crítica para la gobernanza comunitaria del futuro.</em></p>
 </div>
 
