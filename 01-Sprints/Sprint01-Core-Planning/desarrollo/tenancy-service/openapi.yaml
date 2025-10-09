@@ -1,0 +1,168 @@
+openapi: 3.1.0
+info:
+  title: SmartEdify - Tenancy Service
+  version: '1.3'
+  description: API para gestionar la jerarquía organizacional de SmartEdify (Tenants, Condominiums, Buildings, Units, Spaces).
+  contact:
+    email: arquitectura@smartedify.global
+servers:
+  - url: https://api.smartedify.global/tenancy
+    description: Servidor de producción
+
+paths:
+  /v1/tenants:
+    get:
+      summary: Listar Tenants
+      description: Obtiene una lista paginada de tenants, con filtros opcionales.
+      parameters:
+        - name: jurisdiction
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de tenants.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantListResponse'
+    post:
+      summary: Crear un nuevo Tenant
+      description: Crea una nueva organización tenant en la plataforma.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenantRequest'
+      responses:
+        '201':
+          description: Tenant creado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '409':
+          description: Conflicto, el tenant ya existe.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /v1/tenants/{tenant_id}:
+    get:
+      summary: Obtener un Tenant
+      description: Obtiene los detalles de un tenant específico por su ID.
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detalles del Tenant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '404':
+          description: Tenant no encontrado.
+
+components:
+  schemas:
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        legalName:
+          type: string
+        jurisdictionRoot:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        dataResidency:
+          $ref: '#/components/schemas/DataResidency'
+
+    CreateTenantRequest:
+      type: object
+      required:
+        - name
+        - legalName
+        - jurisdictionRoot
+        - dataResidency
+      properties:
+        name:
+          type: string
+        legalName:
+          type: string
+        jurisdictionRoot:
+          type: string
+        dataResidency:
+          $ref: '#/components/schemas/DataResidency'
+
+    DataResidency:
+      type: object
+      properties:
+        regionCode:
+          type: string
+        jurisdiction:
+          type: string
+
+    TenantListResponse:
+      type: object
+      properties:
+        tenants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tenant'
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            size:
+              type: integer
+            total:
+              type: integer
+
+    Problem:
+      type: object
+      description: "RFC 7807 Problem Details"
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    dpop:
+      type: http
+      scheme: dpop
+
+security:
+  - bearerAuth: []
+  - dpop: []

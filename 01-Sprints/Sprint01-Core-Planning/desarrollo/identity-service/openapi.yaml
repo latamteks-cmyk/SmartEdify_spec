@@ -1,0 +1,183 @@
+openapi: 3.1.0
+info:
+  title: SmartEdify - Identity Service
+  version: 1.0.0
+  description: |
+    API para el proveedor central de identidad, autenticación y autorización de SmartEdify.
+    Gestiona flujos OIDC, WebAuthn/Passkeys, DPoP, sesiones y QR contextuales firmados.
+  contact:
+    email: arquitectura@smartedify.global
+servers:
+  - url: https://auth.smartedify.global
+    description: Servidor de producción global
+  - url: https://auth.staging.smartedify.global
+    description: Servidor de Staging
+
+paths:
+  /{tenant_id}/.well-known/openid-configuration:
+    get:
+      summary: Descubrimiento OIDC por Tenant
+      description: Retorna la configuración de OpenID Connect para un tenant específico, permitiendo la federación B2B.
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Configuración OIDC exitosa.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issuer:
+                    type: string
+                  authorization_endpoint:
+                    type: string
+                  token_endpoint:
+                    type: string
+                  jwks_uri:
+                    type: string
+
+  /{tenant_id}/.well-known/jwks.json:
+    get:
+      summary: JWKS (JSON Web Key Set) por Tenant
+      description: Publica las claves públicas utilizadas para firmar los JWTs del tenant especificado.
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Set de claves JWKS.
+
+  /authorize:
+    get:
+      summary: Endpoint de Autorización OIDC
+      description: Inicia el flujo de autorización. Requiere PKCE.
+      parameters:
+        - name: response_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [code]
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: code_challenge
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: code_challenge_method
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [S256]
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+        - name: scope
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirección al proveedor de identidad o a la página de login.
+
+  /oauth/token:
+    post:
+      summary: Endpoint de Token OAuth 2.1
+      description: Intercambia un código de autorización por un Access Token y un Refresh Token. Requiere DPoP.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type:
+                  type: string
+                  enum: [authorization_code, refresh_token]
+                code:
+                  type: string
+                redirect_uri:
+                  type: string
+                client_id:
+                  type: string
+                code_verifier:
+                  type: string
+      responses:
+        '200':
+          description: Tokens emitidos exitosamente.
+
+  /identity/v2/contextual-tokens:
+    post:
+      summary: Generar QR Contextual Firmado
+      description: Crea un token efímero (COSE/JWS) para un caso de uso específico, como el acceso a una asamblea.
+      security:
+        - bearerAuth: []
+          dpop: []
+      responses:
+        '201':
+          description: QR generado.
+
+  /identity/v2/contextual-tokens/validate:
+    post:
+      summary: Validar QR Contextual Firmado
+      description: Valida la firma, TTL y el no-reúso de un QR presentado.
+      security:
+        - bearerAuth: []
+          dpop: []
+      responses:
+        '200':
+          description: El QR es válido.
+        '400':
+          description: El QR es inválido (expirado, ya usado, firma incorrecta).
+
+  /privacy/data:
+    delete:
+      summary: Iniciar Flujo de Borrado de Datos (DSAR)
+      description: Inicia un proceso asíncrono para eliminar los datos de un usuario, orquestado a través de `compliance-service`.
+      security:
+        - bearerAuth: []
+          dpop: []
+      responses:
+        '202':
+          description: Solicitud de borrado aceptada para procesamiento asíncrono.
+
+  /oauth/introspect:
+    post:
+      summary: Introspección de Token
+      description: Valida un token de acceso. Requiere autenticación del cliente (mTLS o private_key_jwt).
+      security:
+        - client_mtls: []
+      responses:
+        '200':
+          description: El token es válido.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    dpop:
+      type: http
+      scheme: dpop
+    client_mtls:
+      type: mutualTLS

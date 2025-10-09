@@ -1,0 +1,63 @@
+//// ----------------------------------------------------
+//// DBML (Database Markup Language) para Identity Service
+//// ----------------------------------------------------
+
+Project SmartEdify {
+  database_type: 'PostgreSQL'
+  Note: 'Esquema para el servicio de identidad central.'
+}
+
+Table users as U {
+  id uuid [pk, not_null]
+  tenant_id uuid [not_null, note: 'FK a la tabla tenants en tenancy-service']
+  username text
+  email text [not_null]
+  phone text
+  status text [default: 'ACTIVE', not_null]
+  email_verified_at timestamptz
+  created_at timestamptz [default: `now()`]
+
+  indexes {
+    (tenant_id, email) [unique]
+  }
+}
+
+Table webauthn_credentials as WC {
+  id uuid [pk, not_null]
+  user_id uuid [ref: > U.id, not_null]
+  credential_id bytes [not_null]
+  public_key bytes [not_null]
+  sign_count bigint [not_null]
+  rp_id text [note: 'Relying Party ID, ej. smartedify.global']
+  origin text
+  last_used_at timestamptz
+  created_at timestamptz [default: `now()`]
+}
+
+Table refresh_tokens as RT {
+  id uuid [pk, not_null]
+  token_hash text [not_null, unique]
+  user_id uuid [ref: > U.id]
+  jkt text [not_null, note: 'DPoP JWK Thumbprint, para sender-constraining']
+  family_id uuid [not_null, note: 'Identificador de la familia de tokens para detectar re-uso']
+  device_id text
+  session_id uuid [ref: > S.id]
+  expires_at timestamptz [not_null]
+  revoked bool [default: false]
+  created_at timestamptz [default: `now()`]
+}
+
+Table sessions as S {
+  id uuid [pk, not_null]
+  user_id uuid [ref: > U.id, not_null]
+  tenant_id uuid [not_null]
+  device_id text
+  cnf_jkt text [note: 'Thumbprint de la clave DPoP vinculada a la sesión']
+  not_after timestamptz [note: 'Utilizado para revocación global de sesiones']
+  revoked_at timestamptz
+  version int [default: 1, note: 'Para optimistic locking']
+}
+
+Note 'Todas las tablas deben estar protegidas por RLS basado en tenant_id.' {
+  color: '#f8a540'
+}

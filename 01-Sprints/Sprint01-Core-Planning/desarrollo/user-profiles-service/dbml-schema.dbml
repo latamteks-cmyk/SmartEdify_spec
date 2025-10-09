@@ -1,0 +1,112 @@
+//// -----------------------------------------------------------
+//// DBML (Database Markup Language) para User Profiles Service
+//// Fuente: Especificacion_Tecnica_Final_user-profiles-service.md, Sección 5
+//// -----------------------------------------------------------
+
+Project SmartEdify_User_Profiles {
+  database_type: 'PostgreSQL'
+  Note: 'Esquema para la identidad funcional y relacional de los usuarios.'
+}
+
+Table profiles {
+  id uuid [pk, not_null]
+  tenant_id uuid [not_null]
+  email text [not_null, unique]
+  phone text
+  full_name text [not_null]
+  status text [not_null, default: 'PENDING_VERIFICATION']
+  country_code text
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  deleted_at timestamptz
+
+  indexes {
+    (tenant_id, email) [unique]
+    (tenant_id, status)
+  }
+}
+
+Table memberships {
+  id uuid [pk, default: `gen_random_uuid()`]
+  tenant_id uuid [not_null]
+  profile_id uuid [not_null, ref: > profiles.id]
+  condominium_id uuid [not_null, note: 'Referencia a condominiums en tenancy-service']
+  unit_id uuid [note: 'Referencia a units en tenancy-service']
+  relation text [not_null, note: 'OWNER, TENANT, CONVIVIENTE, STAFF, etc.']
+  tenant_type text [note: 'ARRENDATARIO, CONVIVIENTE']
+  privileges jsonb [not_null, default: '{}']
+  responsible_profile_id uuid [ref: > profiles.id]
+  since timestamptz [default: `now()`]
+  until timestamptz
+  status text [note: 'Columna generada: ACTIVE o ENDED']
+
+  indexes {
+    (profile_id, condominium_id, unit_id) [unique]
+    (tenant_id, condominium_id)
+  }
+}
+
+Table roles {
+  id uuid [pk, default: `gen_random_uuid()`]
+  tenant_id uuid [not_null]
+  condominium_id uuid [not_null]
+  name text [not_null]
+  permissions jsonb [not_null, default: '[]']
+
+  indexes {
+    (tenant_id, condominium_id, name) [unique]
+  }
+}
+
+Table role_assignments {
+  id uuid [pk, default: `gen_random_uuid()`]
+  tenant_id uuid [not_null]
+  profile_id uuid [not_null, ref: > profiles.id]
+  condominium_id uuid [not_null]
+  role_id uuid [not_null, ref: > roles.id]
+  granted_at timestamptz [default: `now()`]
+  revoked_at timestamptz
+
+  indexes {
+    (profile_id, condominium_id, role_id) [unique]
+  }
+}
+
+Table profile_entitlements {
+  id uuid [pk, default: `gen_random_uuid()`]
+  tenant_id uuid [not_null]
+  profile_id uuid [not_null, ref: > profiles.id]
+  condominium_id uuid [not_null]
+  service_code text [not_null]
+  entitlement_key text [not_null]
+  granted_at timestamptz [default: `now()`]
+  revoked_at timestamptz
+
+  indexes {
+    (profile_id, condominium_id, service_code, entitlement_key) [unique]
+  }
+}
+
+Table communication_consents {
+  id uuid [pk, default: `gen_random_uuid()`]
+  tenant_id uuid [not_null]
+  profile_id uuid [not_null, ref: > profiles.id]
+  channel text [not_null]
+  purpose text [not_null]
+  allowed boolean [not_null]
+  policy_version text
+  updated_at timestamptz [default: `now()`]
+}
+
+Table policy_bindings {
+  id uuid [pk, default: `gen_random_uuid()`]
+  tenant_id uuid [not_null]
+  condominium_id uuid [not_null]
+  policy_id uuid [not_null]
+  policy_version text [not_null]
+  scope text [not_null]
+}
+
+Note 'Todas las tablas deben estar protegidas por RLS basado en tenant_id.' {
+  color: '#f8a540'
+}

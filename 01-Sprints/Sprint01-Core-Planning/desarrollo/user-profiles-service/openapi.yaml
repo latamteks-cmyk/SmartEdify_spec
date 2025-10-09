@@ -1,0 +1,135 @@
+openapi: 3.1.0
+info:
+  title: SmartEdify - User Profiles Service
+  version: '3.1'
+  description: API para gestionar la identidad funcional y relacional de los usuarios de SmartEdify, incluyendo perfiles, membresías, roles y permisos.
+  contact:
+    email: arquitectura@smartedify.global
+servers:
+  - url: https://api.smartedify.global/profiles
+    description: Servidor de producción
+
+paths:
+  /api/v1/user-profiles/me:
+    get:
+      summary: Obtener Mi Perfil
+      description: Retorna el perfil completo del usuario autenticado, incluyendo membresías, roles y entitlements.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil del usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  /api/v1/user-profiles/{profile_id}:
+    get:
+      summary: Obtener un Perfil de Usuario
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detalles del perfil.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  /api/v1/user-profiles/{profile_id}/memberships:
+    get:
+      summary: Listar Membresías de un Perfil
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lista de membresías.
+
+  /api/v1/user-profiles/evaluate:
+    post:
+      summary: Evaluar Permisos
+      description: Evalúa si un perfil tiene un permiso específico en un contexto dado, delegando la decisión en el PDP central.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile_id:
+                  type: string
+                condominium_id:
+                  type: string
+                permission:
+                  type: string
+      responses:
+        '200':
+          description: Resultado de la evaluación.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  allowed:
+                    type: boolean
+
+components:
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        status:
+          type: string
+        memberships:
+          type: array
+          items: {}
+        roles:
+          type: array
+          items: {}
+
+    Problem:
+      type: object
+      description: "RFC 7807 Problem Details"
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    dpop:
+      type: http
+      scheme: dpop
+
+security:
+  - bearerAuth: []
+  - dpop: []

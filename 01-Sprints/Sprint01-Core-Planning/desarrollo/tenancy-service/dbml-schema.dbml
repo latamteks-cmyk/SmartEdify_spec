@@ -1,0 +1,72 @@
+//// -----------------------------------------------------------
+//// DBML (Database Markup Language) para Tenancy Service
+//// Fuente: SAD – Tenancy Service.md, Apéndice 12.3
+//// -----------------------------------------------------------
+
+Project SmartEdify_Tenancy {
+  database_type: 'PostgreSQL'
+  Note: 'Esquema para el servicio de Tenancy, la raíz de confianza organizacional.'
+}
+
+Table tenants {
+  id varchar [pk, not null]
+  name varchar [not null]
+  legal_name varchar [not null]
+  jurisdiction_root varchar [not null, note: 'Jurisdicción principal del tenant']
+  status varchar [default: 'ACTIVE']
+  data_residency varchar [not null, note: 'Código de la región de residencia de datos, ej: us-east-1']
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table condominiums {
+  id varchar [pk, not null]
+  tenant_id varchar [ref: > tenants.id, not null]
+  name varchar [not null]
+  address jsonb [not null, note: '{street, city, country, postal_code}']
+  jurisdiction varchar [not null, note: 'Código del país, ej: PE, BR, CL']
+  timezone varchar [not null]
+  currency varchar [not null]
+  status varchar [default: 'ACTIVE']
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table buildings {
+  id varchar [pk, not null]
+  condominium_id varchar [ref: > condominiums.id, not null]
+  name varchar [not null]
+  floors integer [not null]
+  address_override jsonb [note: 'Dirección específica si es diferente a la del condominio']
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table units {
+  id varchar [pk, not null]
+  building_id varchar [ref: > buildings.id, not null]
+  unit_number varchar [not null]
+  owner_user_id varchar [not null, note: 'Referencia al ID de perfil en user-profiles-service']
+  type varchar [default: 'RESIDENTIAL', note: 'RESIDENTIAL, COMMERCIAL, PARKING, STORAGE']
+  area_sqm decimal
+  bedrooms integer
+  bathrooms integer
+  status varchar [default: 'ACTIVE']
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table subunits {
+  id varchar [pk, not null]
+  unit_id varchar [ref: > units.id, not null]
+  subunit_number varchar [not null]
+  description varchar
+  area_sqm decimal
+  type varchar [default: 'INTERNAL', note: 'INTERNAL, BALCONY, TERRACE, PATIO']
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Note 'Jerarquía: Tenant → Condominium → Building → Unit → Subunit (máximo 3 niveles de profundidad)' {
+  color: '#1d96b2'
+}
