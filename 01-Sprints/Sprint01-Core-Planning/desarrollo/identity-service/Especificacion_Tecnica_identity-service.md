@@ -9,10 +9,20 @@ He actualizado el documento **`identity-service.md`** para que refleje con preci
 
 ---
 
-# 📘 Especificación Técnica: `identity-service` (Puerto 3001) — Versión **3.5**  
+# 📘 Especificación Técnica: `identity-service` (Puerto 3001) — Versión **3.6**
+
+## 🛠️ Ajustes Integrados en esta Versión
+
+Esta versión incorpora los siguientes ajustes recomendados por el arquitecto de software:
+
+- Consolidación del alcance inicial con inclusión explícita de Feature Flags y validación de almacenamiento seguro.
+- Reubicación de las secciones de Feature Flags y almacenamiento seguro dentro de la sección 6: Seguridad y Cumplimiento.
+- Ampliación de la matriz de riesgos con los riesgos R-11 a R-13.
+- Actualización de la hoja de ruta con hitos relacionados a validación de flags y QA de almacenamiento seguro.
+  
 **Metodología**: `github/spec-kit`  
 **Estado**: **Aprobado**  
-**Última Actualización**: **2025-10-09**  
+**Última Actualización**: **2025-10-10**  
 **Alcance**: Proveedor central de identidad, autenticación, autorización y sesiones en entorno multi-tenant, con soporte para autenticación biométrica, QR contextuales firmados y cumplimiento normativo transnacional en tiempo de ejecución.  
 
 ---
@@ -323,9 +333,11 @@ sequenceDiagram
 
 ## 🚀 9. Hoja de Ruta
 
-- **Sprint 2 (Fase 1)**: Implementación base (OIDC, WebAuthn, DPoP)  
-- **Sprint 3**: Integración con `user-profiles` y `tenancy`  
+- **Sprint 2 (Fase 1)**: Implementación base (OIDC, WebAuthn, DPoP)
+- **Sprint 3**: Integración con `user-profiles` y `tenancy`
+- **Sprint 4**: Validación de almacenamiento seguro en QA
 - **Sprint 5**: DSAR y cumplimiento en tiempo de ejecución
+- **Sprint 6**: Validación automática de Feature Flags en CI/CD
 
 ## 🔧 10. Plan de Recuperación ante Desastres (DRP)
 
@@ -353,6 +365,15 @@ sequenceDiagram
 | Servicios no manejan rollover JWKS | Pruebas de integración + documentación |
 | HS256 en ejemplos | Linter en CI/CD que falla si detecta `alg.*HS256` |
 | Latencia inter-región | Cachés regionales + colas Kafka |
+
+
+### Riesgos nuevos incorporados:
+| ID | Riesgo | Impacto | Probabilidad | Nivel de Riesgo | Estrategia de Mitigación |
+|----|--------|---------|--------------|------------------|----------------------------|
+
+| **R-11** | **Almacenamiento inseguro de tokens en Frontend**<br>Uso de `localStorage` expone tokens a XSS. | Alto | Media | Alto | • Prohibir `localStorage`.<br>• Usar cookies HTTPOnly o almacenamiento seguro vía BFF.<br>• Validar en QA y documentar en runbooks. |
+| **R-12** | **Lectura incorrecta de QR de identidad**<br>Fallos en validación de QR en móviles. | Medio | Media | Medio | • Validar TTL de 300s y `kid` en COSE/JWS.<br>• Pruebas E2E en Mobile.<br>• Métrica: `qr_identity_validation_error_rate`. |
+| **R-13** | **Desalineación entre Feature Flags y despliegue**<br>Flags activos no sincronizados con versión desplegada. | Medio | Alta | Medio | • Validar flags en CI/CD.<br>• Documentar en `feature_flags.md`.<br>• Métrica: `feature_flag_mismatch_detected_total`. |
 
 ## 🔗 12. Matriz de Dependencias Críticas
 
