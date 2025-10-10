@@ -69,3 +69,59 @@ Las pruebas se derivan de los Criterios de Aceptación (DoD), la matriz de riesg
 - **Pruebas de Seguridad:** OWASP ZAP, Snyk.
 - **Chaos Engineering:** Gremlin, Istio Fault Injection.
 - **Entorno:** Las pruebas se ejecutarán en un entorno de `staging` aislado y como parte del pipeline de CI/CD en GitLab.
+
+
+---
+
+## 4. Trazabilidad y Validación Extendida
+
+### 4.1. Validación de Feature Flags
+
+- **Objetivo:** Asegurar que los flags activos estén sincronizados con el despliegue.
+- **Cobertura:** Flags críticos como `enable_passkey`, `use_compliance_gate`, `mfa_required`.
+- **Pruebas:**
+  - Validación en CI/CD (`feature_flag_mismatch_detected_total`)
+  - Pruebas contractuales en staging
+  - Verificación de fallback en caso de flag desactivado
+
+### 4.2. Validación de Almacenamiento Seguro en Frontend
+
+- **Objetivo:** Confirmar que los tokens no se almacenan en `localStorage`.
+- **Pruebas:**
+  - Automatizadas (`frontend-token-storage.spec.ts`)
+  - Validación de `storage_validation_passed = true` en sesiones
+  - Revisión de runbooks (`frontend_security.md`)
+
+### 4.3. Métricas Observables
+
+- Todas las pruebas deben registrar métricas en Prometheus:
+  - `qr_identity_validation_error_rate`
+  - `feature_flag_mismatch_detected_total`
+  - `auth_dpop_replay_latency_p95`
+  - `webauthn_registration_error_rate`
+  - `logout_global_p95_seconds`
+
+---
+
+## 5. Alineación con OpenAPI y Especificación Técnica v3.6
+
+- Todos los endpoints probados deben estar definidos en `openapi.yaml`.
+- Validación de contratos OpenAPI 3.1 en CI/CD.
+- Pruebas de introspección deben incluir `storage_validation_passed`.
+- Validación de `/feature-flags` como nuevo endpoint.
+- Confirmar que los errores siguen RFC 7807 (`application/problem+json`).
+
+---
+
+## 6. Historial de Actualización
+
+- **Versión:** 1.1
+- **Fecha:** 2025-10-10
+- **Autor:** QA Lead – SmartEdify
+- **Cambios:**
+  - Inclusión de validación de feature flags
+  - Validación de almacenamiento seguro
+  - Métricas observables
+  - Alineación con OpenAPI actualizado
+  - Trazabilidad extendida
+
