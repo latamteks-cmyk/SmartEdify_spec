@@ -1,21 +1,21 @@
-//// ----------------------------------------------------
-//// DBML (Database Markup Language) para Identity Service
-//// ----------------------------------------------------
+// ----------------------------------------------------
+// DBML (Database Markup Language) para Identity Service
+// ----------------------------------------------------
 
 Project SmartEdify {
   database_type: 'PostgreSQL'
-  Note: 'Esquema para el servicio de identidad central.'
+  note: 'Esquema para el servicio de identidad central. Todas las tablas deben estar protegidas por RLS basado en tenant_id.'
 }
 
 Table users as U {
-  id uuid [pk, not_null]
-  tenant_id uuid [not_null, note: 'FK a la tabla tenants en tenancy-service']
-  username text
-  email text [not_null]
-  phone text
-  status text [default: 'ACTIVE', not_null]
-  email_verified_at timestamptz
-  created_at timestamptz [default: `now()`]
+  id uuid [pk, not null, note: 'System: UUID v4 generado al crear usuario. Ej: a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8']
+  tenant_id uuid [not null, note: 'Frontend/Auth: ID del tenant seleccionado en login o registro. Ej: tenant de "Administradora Primavera" → 9f1a2b3c-4d5e-6f78-90a1-b2c3d4e5f678']
+  username text [note: 'Frontend: Nombre de usuario elegido en formulario. Ej: "mape.perez"']
+  email text [not null, note: 'Frontend: Email ingresado en registro. Ej: "maria.perez@example.com"']
+  phone text [note: 'Frontend: Teléfono con código de país. Ej: "+51987654321"']
+  status text [default: 'ACTIVE', not null, note: 'System/Auth: Estado del usuario. Valores: ACTIVE, SUSPENDED, DELETED']
+  email_verified_at timestamptz [note: 'Auth: Timestamp cuando se verificó el email. NULL si no verificado.']
+  created_at timestamptz [default: 'now()', note: 'System: Fecha de creación del registro.']
 
   indexes {
     (tenant_id, email) [unique]
@@ -23,41 +23,53 @@ Table users as U {
 }
 
 Table webauthn_credentials as WC {
-  id uuid [pk, not_null]
-  user_id uuid [ref: > U.id, not_null]
-  credential_id bytes [not_null]
-  public_key bytes [not_null]
-  sign_count bigint [not_null]
-  rp_id text [note: 'Relying Party ID, ej. smartedify.global']
-  origin text
-  last_used_at timestamptz
-  created_at timestamptz [default: `now()`]
+  id uuid [pk, not null, note: 'System: UUID v4 interno.']
+  user_id uuid [ref: > U.id, not null, note: 'System: Relación con users.id']
+  credential_id bytea [not null, note: 'Auth: ID binario de la credencial WebAuthn (del navegador).']
+  public_key bytea [not null, note: 'Auth: Clave pública en formato COSE (del attestation response).']
+  sign_count bigint [not null, note: 'Auth: Contador de firmas, usado para prevenir reutilización.']
+  rp_id text [note: 'Auth: Relying Party ID. Ej: "smartedify.global"']
+  origin text [note: 'Auth: Origen HTTPS del cliente. Ej: "https://app.smartedify.global"']
+  last_used_at timestamptz [note: 'System: Última vez que se usó esta credencial para login.']
+  created_at timestamptz [default: 'now()', note: 'System: Fecha de registro de la credencial.']
 }
 
 Table refresh_tokens as RT {
-  id uuid [pk, not_null]
-  token_hash text [not_null, unique]
-  user_id uuid [ref: > U.id]
-  jkt text [not_null, note: 'DPoP JWK Thumbprint, para sender-constraining']
-  family_id uuid [not_null, note: 'Identificador de la familia de tokens para detectar re-uso']
-  device_id text
-  session_id uuid [ref: > S.id]
-  expires_at timestamptz [not_null]
-  revoked bool [default: false]
-  created_at timestamptz [default: `now()`]
+  id uuid [pk, not null, note: 'System: UUID v4 del token de refresco.']
+  token_hash text [not null, unique, note: 'Auth: Hash (SHA-256) del token de refresco. Nunca se almacena en texto claro.']
+  user_id uuid [ref: > U.id, note: 'System: Usuario dueño del token.']
+  jkt text [not null, note: 'Auth: DPoP JWK Thumbprint (SHA-256 base64url). Ej: "abc123def456..."']
+  family_id uuid [not null, note: 'System: ID de la "familia" de tokens para detección de reemplazo.']
+  device_id text [note: 'Frontend: Identificador de dispositivo (generado en frontend). Ej: "iPhone14-iOS17-xyz"']
+  session_id uuid [ref: > S.id, note: 'System: Sesión asociada al token.']
+  expires_at timestamptz [not null, note: 'System: Fecha de expiración. Ej: ahora + 30 días.']
+  revoked boolean [default: false, note: 'System: Indica si fue revocado explícitamente.']
+  created_at timestamptz [default: 'now()', note: 'System: Momento de emisión del token.']
+  replaced_by_id uuid [note: 'System: ID del nuevo token que invalidó a este (rotación).']
 }
 
 Table sessions as S {
-  id uuid [pk, not_null]
-  user_id uuid [ref: > U.id, not_null]
-  tenant_id uuid [not_null]
-  device_id text
-  cnf_jkt text [note: 'Thumbprint de la clave DPoP vinculada a la sesión']
-  not_after timestamptz [note: 'Utilizado para revocación global de sesiones']
-  revoked_at timestamptz
-  version int [default: 1, note: 'Para optimistic locking']
+  id uuid [pk, not null, note: 'System: UUID v4 de la sesión.']
+  user_id uuid [ref: > U.id, not null, note: 'System: Usuario asociado.']
+  tenant_id uuid [not null, note: 'Auth: Tenant activo en la sesión. Mismo que en users.tenant_id.']
+  device_id text [note: 'Frontend: Mismo device_id usado en refresh_tokens.']
+  cnf_jkt text [note: 'Auth: DPoP confirmation thumbprint vinculado a la sesión.']
+  not_after timestamptz [note: 'Admin: Si se establece, invalida la sesión después de esta fecha (ej: revocación programada).']
+  revoked_at timestamptz [note: 'System/Admin: Timestamp de revocación. NULL = activa.']
+  version integer [default: 1, note: 'System: Para optimistic locking en actualizaciones concurrentes.']
+  storage_validation_passed boolean [default: true, note: 'Frontend: Indica si el frontend pasó validaciones de almacenamiento seguro (ej: no localStorage inseguro).']
 }
 
-Note 'Todas las tablas deben estar protegidas por RLS basado en tenant_id.' {
-  color: '#f8a540'
+Table feature_flags as FF {
+  id uuid [pk, not null, note: 'System: UUID v4 del flag.']
+  tenant_id uuid [not null, note: 'Admin: ID del tenant al que aplica. Ej: "Administradora Primavera" → 9f1a2b3c-4d5e-6f78-90a1-b2c3d4e5f678']
+  name text [not null, note: 'Admin: Nombre técnico del flag. Ej: "enable_passkey", "mfa_required"']
+  description text [note: 'Admin: Descripción legible. Ej: "Habilita inicio de sesión con llaves de acceso (Passkeys)"']
+  enabled boolean [default: false, not null, note: 'Admin: Estado actual del flag.']
+  created_at timestamptz [default: 'now()', note: 'System: Fecha de creación del flag.']
+  updated_at timestamptz [note: 'System: Última modificación.']
+
+  indexes {
+    (tenant_id, name) [unique]
+  }
 }
