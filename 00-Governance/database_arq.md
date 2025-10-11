@@ -362,5 +362,3 @@ graph TD
    - RLS (seguridad a nivel de fila)
 4. **Jerarquía Flexible**: Tenant → Condominio → Edificio → Unidad → Subunidad
 5. **Sistema de Relaciones Complejo**: Tipos y subtipos de membresías
-
-¿Te gustaría que profundice en alguna parte específica del diagrama o genere visualizaciones adicionales para algún componente en particular?
