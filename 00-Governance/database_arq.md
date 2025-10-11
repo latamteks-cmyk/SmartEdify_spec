@@ -1,180 +1,271 @@
-# SmartEdify · Arquitectura de Datos (versión revisada)
-**Fecha:** 2025-10-11  
-**Ámbito:** Modelo multi-tenant B2B2C, pertenencia multi-condominio por usuario, RLS por `tenant_id` y opcional por `condominium_id`, cifrado de columnas sensibles, particionado de tablas de alta rotación.
+# SmartEdify · Arquitectura de Datos Actualizada (Implementación Completa)
 
-> Este documento reemplaza y actualiza `database_arq_1` con representaciones gráficas corregidas y unificadas. Integra los ajustes derivados del análisis DBA previo: desnormalización de `tenant_id` en tablas de acceso, RLS sin joins, unicidad condicional, y políticas de retención.
+## 🔄 Modificaciones Implementadas
 
----
+### 1. Desnormalización de `tenant_id` y RLS Optimizado
 
-## 1. Modelo conceptual de entidades (ER revisado)
+```erDiagram
+    %% =============================================
+    %% IDENTITY SERVICE (3001) - Núcleo de Autenticación
+    %% =============================================
+    users {
+        uuid id PK "UUID v4 global"
+        citext email "Case-insensitive, único global"
+        text phone "Cifrado KMS (no almacenado en claro)"
+        text global_status "ACTIVE, SUSPENDED, DELETED"
+        timestamptz email_verified_at
+        timestamptz created_at
+    }
 
-```mermaid
-erDiagram
-    TENANTS ||--o{ PROFILES : "1:N perfiles por tenant"
-    USERS ||--o{ PROFILES : "1:N perfiles por tenant"
-    USERS ||--o{ WEBAUTHN_CREDENTIALS : "credenciales WebAuthn"
-    PROFILES ||--o{ MEMBERSHIPS : "membresías por condominio/unidad"
-    TENANTS ||--o{ CONDOMINIUMS : "condominios del tenant"
-    CONDOMINIUMS ||--o{ BUILDINGS : "edificios"
-    BUILDINGS ||--o{ UNITS : "unidades"
-    UNITS ||--o{ SUBUNITS : "subunidades"
-    UNITS ||--o{ MEMBERSHIPS : "vínculo opcional a la unidad"
-    TENANTS ||--o{ SESSIONS : "contexto de sesión"
-    USERS ||--o{ SESSIONS : "sesiones por usuario"
-    SESSIONS ||--o{ REFRESH_TOKENS : "tokens"
-    TENANTS ||--o{ COMPLIANCE_TASKS : "tareas normativas"
-    TENANTS ||--o{ AUDIT_LOG : "eventos de auditoría"
-```
+    user_tenant_assignments {
+        uuid id PK
+        uuid user_id FK
+        uuid tenant_id FK
+        text status "ACTIVE, SUSPENDED, REMOVED"
+        text default_role "USER, ADMIN, etc."
+        timestamptz assigned_at
+        timestamptz removed_at
+        jsonb tenant_specific_settings
+    }
 
-**Claves y relaciones mínimas**
-- `profiles(user_id, tenant_id)` único por usuario-tenant.  
-- `memberships(profile_id, tenant_id, condominium_id, unit_id?, relation, sub_relation, status)` con integridad `tenant_id == condominiums.tenant_id`.  
-- `sessions(user_id, tenant_id)` define el contexto activo. Cambiar de tenant implica nueva sesión.  
-- `tenants(tenant_type ∈ {ADMIN_COMPANY, INDIVIDUAL_CONDOMINIUM}, data_residency)`.  
+    sessions {
+        uuid id PK
+        uuid user_id FK
+        uuid tenant_id "Desnormalizado para RLS"
+        text device_id
+        text cnf_jkt "DPoP confirmation thumbprint"
+        timestamptz not_after "Clave para particionado"
+        timestamptz revoked_at
+        integer version "Optimistic locking"
+        boolean storage_validation_passed "Validación explícita desde frontend"
+        timestamptz created_at
+    }
 
----
+    refresh_tokens {
+        uuid id PK
+        uuid session_id FK
+        text token_hash "SHA-256 irrevertible"
+        timestamptz expires_at "Clave para particionado"
+        timestamptz created_at
+    }
 
-## 2. Vista lógica con `tenant_id` desnormalizado
+    feature_flags {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        text name
+        text description
+        boolean enabled
+        timestamptz created_at
+        timestamptz updated_at
+    }
 
-```mermaid
-erDiagram
-    TENANTS {{uuid id}} o{--|| CONDOMINIUMS : owns
-    CONDOMINIUMS {{uuid id, uuid tenant_id}} o{--|| BUILDINGS : has
-    BUILDINGS {{uuid id, uuid tenant_id, uuid condominium_id}} o{--|| UNITS : has
-    UNITS {{uuid id, uuid tenant_id, uuid building_id}} o{--|| SUBUNITS : has
-    PROFILES {{uuid id, uuid user_id, uuid tenant_id, citext email}}
-    MEMBERSHIPS {{uuid id, uuid tenant_id, uuid profile_id, uuid condominium_id, uuid unit_id?,
-                  text relation, text sub_relation, text status}}
-    SESSIONS {{uuid id, uuid user_id, uuid tenant_id, timestamptz not_after, timestamptz revoked_at?}}
-    REFRESH_TOKENS {{uuid id, uuid session_id, bytea token_hash, timestamptz expires_at}}
-    WEBAUTHN_CREDENTIALS {{uuid id, uuid user_id, bytea credential_id, bytea public_key}}
-```
+    %% =============================================
+    %% USER PROFILES SERVICE (3002) - Identidad Funcional
+    %% =============================================
+    profiles {
+        uuid id PK
+        uuid user_id FK
+        uuid tenant_id "Desnormalizado para RLS"
+        citext email "Único por tenant"
+        text phone "Cifrado KMS"
+        text full_name
+        text status "PENDING_VERIFICATION, ACTIVE, etc."
+        text country_code
+        jsonb personal_data
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
 
-Razonamiento: mover `tenant_id` a todas las tablas consultadas por usuarios reduce joins en políticas RLS y simplifica índices y filtros.
+    relation_types {
+        uuid id PK
+        text code "OWNER, TENANT, FAMILY_MEMBER, BOARD_MEMBER, VENDOR"
+        text description
+        text category "RESIDENT, STAFF, GOVERNANCE, EXTERNAL"
+        boolean can_vote
+        boolean can_represent
+        boolean requires_approval
+    }
 
----
+    sub_relation_types {
+        uuid id PK
+        uuid relation_type_id FK
+        text code "PRIMARY_OWNER, CO_OWNER, SPOUSE, PRESIDENT, etc."
+        text description
+        integer weight
+        jsonb inheritance_chain
+    }
 
-## 3. Políticas RLS sin joins (patrón)
+    memberships {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        uuid profile_id FK
+        uuid condominium_id
+        uuid unit_id
+        text relation
+        text sub_relation
+        jsonb privileges
+        uuid responsible_profile_id FK
+        timestamptz since
+        timestamptz until
+        text status "ACTIVE, ENDED, SUSPENDED"
+    }
 
-```sql
--- Variables de sesión inyectadas por el backend
--- SELECT set_config('app.tenant_id', :tenant, true);
--- SELECT set_config('app.condominium_id', :condo, true); -- opcional
+    roles {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        uuid condominium_id
+        text name
+        jsonb permissions
+    }
 
-ALTER TABLE profiles    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE memberships ENABLE ROW LEVEL SECURITY;
+    role_assignments {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        uuid profile_id FK
+        uuid condominium_id
+        uuid role_id FK
+        timestamptz granted_at
+        timestamptz revoked_at
+    }
 
-CREATE POLICY rls_profiles_by_tenant ON profiles
-USING (tenant_id = current_setting('app.tenant_id')::uuid)
-WITH CHECK (tenant_id = current_setting('app.tenant_id')::uuid);
+    delegations {
+        uuid id PK
+        uuid delegator_profile_id FK
+        uuid delegate_profile_id FK
+        uuid condominium_id FK
+        uuid tenant_id "Desnormalizado para RLS"
+        text scope
+        timestamptz expires_at
+        timestamptz revoked_at
+        timestamptz created_at
+    }
 
-CREATE POLICY rls_memberships_by_scope ON memberships
-USING (
-  tenant_id = current_setting('app.tenant_id')::uuid
-  AND ( current_setting('app.condominium_id', true) IS NULL
-        OR condominium_id = current_setting('app.condominium_id')::uuid )
-)
-WITH CHECK (
-  tenant_id = current_setting('app.tenant_id')::uuid
-  AND ( current_setting('app.condominium_id', true) IS NULL
-        OR condominium_id = current_setting('app.condominium_id')::uuid )
-);
-```
+    communication_consents {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        uuid profile_id FK
+        text channel
+        text purpose
+        boolean allowed
+        text policy_version
+        timestamptz updated_at
+    }
 
----
+    %% =============================================
+    %% TENANCY SERVICE (3003) - Raíz Organizacional
+    %% =============================================
+    tenants {
+        uuid id PK
+        text name
+        text legal_name
+        text tenant_type "ADMIN_COMPANY | INDIVIDUAL_CONDOMINIUM"
+        text jurisdiction_root
+        text status
+        text data_residency
+        timestamptz created_at
+        timestamptz updated_at
+    }
 
-## 4. Diagrama de flujo de control de acceso
+    condominiums {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        text name
+        jsonb address
+        text jurisdiction "PE, BR, CL, CO, US, ES"
+        text timezone
+        text currency
+        text status
+        timestamptz created_at
+        timestamptz updated_at
+    }
 
-```mermaid
-flowchart TD
-    A[Request API] --> B[Auth: WebAuthn/OAuth]
-    B --> C[Resolve user_id]
-    C --> D[Select tenant context]
-    D --> E[SET app.tenant_id, app.condominium_id?]
-    E --> F[SQL Query]
-    F --> G{{RLS Policies}}
-    G -->|allow| H[Rows filtered by tenant/condo]
-    G -->|deny| X[403/empty set]
-```
+    buildings {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        uuid condominium_id FK
+        text name
+        integer floors
+        jsonb address_override
+        timestamptz created_at
+        timestamptz updated_at
+    }
 
----
+    units {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        uuid building_id FK
+        text unit_number "101, A01, Casa-01"
+        text type "RESIDENTIAL, COMMERCIAL, PARKING, STORAGE"
+        decimal area_sqm
+        integer bedrooms
+        integer bathrooms
+        text status
+        timestamptz created_at
+        timestamptz updated_at
+    }
 
-## 5. Integridad y unicidad
+    subunits {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        uuid unit_id FK
+        text subunit_number "P-101, D-101, J-01"
+        text description
+        text type "PARKING, STORAGE, GARDEN, BALCONY"
+        decimal area_sqm
+        boolean is_common_area
+        text access_code
+        timestamptz created_at
+        timestamptz updated_at
+    }
 
-- `UNIQUE (user_id, tenant_id) WHERE deleted_at IS NULL` en `profiles`.  
-- `UNIQUE (tenant_id, email) WHERE deleted_at IS NULL` en `profiles` y `citext` para email case-insensitive.  
-- `UNIQUE (unit_id) WHERE relation='OWNER' AND sub_relation='PRIMARY_OWNER' AND status='ACTIVE'` en `memberships`.  
-- Trigger `BEFORE INSERT/UPDATE` en `memberships` para validar `tenant_id == (SELECT tenant_id FROM condominiums WHERE id=condominium_id)`.  
+    %% =============================================
+    %% CUMPLIMIENTO Y AUDITORÍA
+    %% =============================================
+    compliance_tasks {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        text task_type
+        text status
+        timestamptz deadline
+        timestamptz created_at
+    }
 
----
+    audit_log {
+        uuid id PK
+        uuid tenant_id "Desnormalizado para RLS"
+        uuid user_id
+        uuid session_id
+        text action
+        text table_name
+        jsonb old_data
+        jsonb new_data
+        inet ip
+        timestamptz created_at
+    }
 
-## 6. Índices y particionado
+    %% =============================================
+    %% RELACIONES PRINCIPALES
+    %% =============================================
+    users ||--o{ user_tenant_assignments : "asignado_a"
+    user_tenant_assignments }o--|| tenants : "pertenece_a"
+    users ||--o{ sessions : "mantiene"
+    sessions ||--o{ refresh_tokens : "posee"
+    tenants ||--o{ feature_flags : "configura"
 
-- `sessions`: índice `(user_id, not_after DESC) WHERE revoked_at IS NULL`. Particionado RANGE mensual por `not_after`.  
-- `refresh_tokens`: `UNIQUE(token_hash)` e índice por `expires_at`. Particionado mensual por `expires_at`.  
-- `compliance_tasks`: índices en `(tenant_id, status, deadline)` y particionado por `created_at`.  
-- Ajustar `autovacuum_analyze_scale_factor` y `autovacuum_vacuum_scale_factor` bajo para tablas de alta rotación.  
+    users ||--o{ profiles : "tiene_perfiles_en"
+    profiles ||--o{ memberships : "tiene_membresias_en"
+    relation_types ||--o{ sub_relation_types : "tiene_subtipos"
+    memberships }o--|| relation_types : "tipo_relacion"
+    memberships }o--|| sub_relation_types : "subtipo_relacion"
 
----
+    tenants ||--o{ condominiums : "administra"
+    condominiums ||--o{ buildings : "contiene"
+    buildings ||--o{ units : "compone"
+    units ||--o{ subunits : "tiene_asociadas"
 
-## 7. Seguridad de datos
-
-- Cifrar columnas sensibles con KMS: `users.phone`, `webauthn_credentials.public_key`.  
-- Mantener `token_hash` como hash irrevertible.  
-- `pgaudit` para operaciones DML y DDL críticas.  
-- `audit_log(tenant_id, user_id, session_id, action, table, old, new, ip, ts)` con retención definida por normativa del tenant.  
-- `data_residency`: clusters por región o etiqueta de `region_code` por fila si es multi-región en un único cluster.  
-
----
-
-## 8. Escenarios multi-tenant y multi-condominio
-
-- Un usuario puede pertenecer a varios tenants con perfiles separados.  
-- Un perfil puede tener múltiples membresías en varios condominios del mismo tenant.  
-- `sessions.tenant_id` fija el contexto. Cambio de tenant requiere nueva sesión.  
-
----
-
-## 9. Diferencias clave respecto a la versión anterior
-
-1. `tenant_id` desnormalizado en `buildings/units/subunits` para RLS simple.  
-2. Reglas de unicidad por tenant y por unidad para propietarios primarios.  
-3. Particionado recomendado para `sessions`, `refresh_tokens`, y `compliance_*`.  
-4. Diagramas unificados y consistentes con el flujo de acceso.  
-
----
-
-## 10. Apéndice: DDL mínimo sugerido
-
-```sql
-CREATE EXTENSION IF NOT EXISTS citext;
-
--- Unicidad de perfiles por usuario-tenant
-CREATE UNIQUE INDEX IF NOT EXISTS profiles_user_tenant_uniq
-  ON profiles(user_id, tenant_id) WHERE deleted_at IS NULL;
-
--- Email por tenant
-ALTER TABLE profiles ALTER COLUMN email TYPE citext;
-CREATE UNIQUE INDEX IF NOT EXISTS profiles_tenant_email_uniq
-  ON profiles(tenant_id, email) WHERE deleted_at IS NULL;
-
--- Integridad membership-condominium
-CREATE OR REPLACE FUNCTION trg_membership_tenant_check()
-RETURNS trigger AS $$
-BEGIN
-  IF NEW.tenant_id IS DISTINCT FROM (SELECT tenant_id FROM condominiums WHERE id = NEW.condominium_id) THEN
-    RAISE EXCEPTION 'Membership tenant_id no coincide con condominium.tenant_id';
-  END IF;
-  RETURN NEW;
-END$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS membership_tenant_check ON memberships;
-CREATE TRIGGER membership_tenant_check
-BEFORE INSERT OR UPDATE ON memberships
-FOR EACH ROW EXECUTE FUNCTION trg_membership_tenant_check();
-
--- Propietario primario único por unidad
-CREATE UNIQUE INDEX IF NOT EXISTS one_primary_owner_per_unit
-  ON memberships(unit_id)
-  WHERE relation='OWNER' AND sub_relation='PRIMARY_OWNER' AND status='ACTIVE';
+    profiles ||--o{ role_assignments : "asignado"
+    roles ||--o{ role_assignments : "asignado_en"
+    profiles ||--o{ delegations : "delega_a"
+    profiles ||--o{ communication_consents : "consiente"
 ```
