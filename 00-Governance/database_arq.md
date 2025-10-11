@@ -642,23 +642,290 @@ sequenceDiagram
     F->>C: Entregar respuesta en plazo legal (30 días)
 ```
 
-## 🎯 Resumen de Mejoras Implementadas
+# Análisis de Patrones de Consulta para Compliance: Bajo Demanda vs Actualización
 
-### **Problemas Resueltos:**
-✅ **Base Legal**: Todas las tablas de tratamiento ahora incluyen base legal  
-✅ **Datos Sensibles**: Separados con consentimiento explícito y finalidad específica  
-✅ **Gestión de Derechos**: Sistema formal para solicitudes ARSULIPO/CCPA  
-✅ **Transferencias Internacionales**: Control y bases legales documentadas  
-✅ **Registro Bancos de Datos**: Específico para Perú  
-✅ **DPO/Encarregado**: Designación formal por tenant  
-✅ **Evaluaciones de Impacto**: EIPD/EIVD automatizadas  
+## 🔍 **Evaluación de Patrones de Acceso a Datos de Compliance**
 
-### **Cumplimiento por Jurisdicción:**
-🇪🇸 **España (GDPR)**: Bases legales, EIPD, DPO, gestión derechos  
-🇧🇷 **Brasil (LGPD)**: Encarregado, datos sensibles, anotações legais  
-🇵🇪 **Perú (Ley 29733)**: Registro bancos datos, consentimiento expreso  
-🇺🇸 **EE.UU. (CCPA)**: Opt-out venta, no discriminación  
-🇨🇱 **Chile (Ley 19.628)**: Habeas Data, finalidad específica  
+### **1. Consultas BAJO DEMANDA (On-Demand)**
+```sql
+-- Ejemplos de consultas bajo demanda
+SELECT * FROM data_subject_requests 
+WHERE tenant_id = ? AND status = 'PENDING';
 
-### **Estado Legal:**
-**✅ IMPLEMENTABLE EN PRODUCCIÓN** - Cumple con los requisitos mínimos legales para operar en las jurisdicciones objetivo.
+SELECT COUNT(*) FROM audit_log 
+WHERE tenant_id = ? AND created_at BETWEEN ? AND ?;
+
+SELECT * FROM impact_assessments 
+WHERE tenant_id = ? AND next_review < NOW();
+```
+
+### **2. Consultas por ACTUALIZACIÓN (Event-Driven)**
+```sql
+-- Ejemplos disparados por eventos
+INSERT INTO audit_log 
+SELECT ... FROM users WHERE id = ?; -- Trigger después de modificación
+
+UPDATE compliance_tasks SET status = 'OVERDUE'
+WHERE deadline < NOW() AND status = 'PENDING'; -- Job programado
+```
+
+## 📊 **Análisis de Performance por Tabla de Compliance**
+
+### **Tablas Optimizadas para Bajo Demanda:**
+
+| **Tabla** | **Volumen** | **Patrón Acceso** | **Indexación Recomendada** |
+|-----------|-------------|-------------------|----------------------------|
+| `data_subject_requests` | Bajo-Medio | Búsquedas ad-hoc | `(tenant_id, status, received_at)` |
+| `impact_assessments` | Bajo | Consultas puntuales | `(tenant_id, next_review)` |
+| `data_bank_registrations` | Muy Bajo | Lecturas esporádicas | `(tenant_id, expires_at)` |
+
+### **Tablas que Requieren Actualización en Tiempo Real:**
+
+| **Tabla** | **Volumen** | **Patrón Acceso** | **Estrategia** |
+|-----------|-------------|-------------------|----------------|
+| `audit_log` | Muy Alto | Escritura continua + consultas | Particionado por tiempo |
+| `compliance_tasks` | Medio | Updates frecuentes | Índices covering |
+
+## 🚀 **Arquitectura Híbrida Propuesta**
+
+```mermaid
+graph TB
+    subgraph "Capa de Eventos en Tiempo Real"
+        E1[User Action]
+        E2[Data Update]
+        E3[System Event]
+        
+        E1 --> ET[Event Tracker]
+        E2 --> ET
+        E3 --> ET
+        
+        ET --> CQ[Compliance Queue<br/>Kafka/RabbitMQ]
+    end
+    
+    subgraph "Procesamiento Compliance"
+        CQ --> SP1[Stream Processor 1<br/>Audit Log]
+        CQ --> SP2[Stream Processor 2<br/>Consent Updates]
+        CQ --> SP3[Stream Processor 3<br/>Task Management]
+        
+        SP1 --> CDB1[(Audit Log<br/>Particionado)]
+        SP2 --> CDB2[(Consents<br/>Actualizado)]
+        SP3 --> CDB3[(Tasks<br/>Estado actual)]
+    end
+    
+    subgraph "Consultas Bajo Demanda"
+        Q1[Ad-hoc Queries] --> CDB1
+        Q2[Reports] --> CDB2
+        Q3[Legal Requests] --> CDB3
+        
+        CDB1 --> R1[Real-time Dashboard]
+        CDB2 --> R2[Compliance Reports]
+        CDB3 --> R3[Legal Response]
+    end
+```
+
+## ⚡ **Implementación Técnica - Patrones Mixtos**
+
+### **Caso 1: Audit Log - Alto Volumen, Consultas Bajo Demanda**
+```sql
+-- Particionado mensual para performance
+CREATE TABLE audit_log (
+    uuid id PK,
+    uuid tenant_id,
+    timestamptz created_at,
+    -- otros campos
+) PARTITION BY RANGE (created_at);
+
+-- Crear particiones mensuales
+CREATE TABLE audit_log_2024_06 PARTITION OF audit_log
+    FOR VALUES FROM ('2024-06-01') TO ('2024-07-01');
+
+-- Índices optimizados para consultas bajo demanda
+CREATE INDEX CONCURRENTLY idx_audit_tenant_date 
+ON audit_log (tenant_id, created_at) 
+WHERE created_at > NOW() - INTERVAL '1 year';
+```
+
+### **Caso 2: Data Subject Requests - Bajo Volumen, Mixto**
+```sql
+-- Tabla con triggers para actualizaciones en tiempo real
+CREATE TABLE data_subject_requests (
+    uuid id PK,
+    uuid tenant_id,
+    text status,
+    timestamptz received_at,
+    timestamptz resolved_at,
+    -- otros campos
+);
+
+-- Trigger para actualizar métricas en tiempo real
+CREATE OR REPLACE FUNCTION update_compliance_metrics()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Actualizar dashboard en tiempo real
+    PERFORM pg_notify('compliance_update', 
+        json_build_object(
+            'tenant_id', NEW.tenant_id,
+            'request_type', NEW.request_type,
+            'status', NEW.status
+        )::text
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER compliance_metrics_trigger
+    AFTER INSERT OR UPDATE ON data_subject_requests
+    FOR EACH ROW EXECUTE FUNCTION update_compliance_metrics();
+```
+
+### **Caso 3: Compliance Tasks - Actualización Programada + Bajo Demanda**
+```sql
+-- Job programado para actualizaciones
+CREATE OR REPLACE FUNCTION update_overdue_tasks()
+RETURNS void AS $$
+BEGIN
+    UPDATE compliance_tasks 
+    SET status = 'OVERDUE'
+    WHERE deadline < NOW() 
+      AND status = 'PENDING'
+      AND tenant_id IN (
+          SELECT id FROM tenants WHERE status = 'ACTIVE'
+      );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Programar ejecución cada hora
+-- SELECT cron.schedule('0 * * * *', 'SELECT update_overdue_tasks();');
+```
+
+## 📈 **Estrategias de Optimización por Tipo de Consulta**
+
+### **Para Consultas Bajo Demanda:**
+```sql
+-- Materialized Views para reports complejos
+CREATE MATERIALIZED VIEW compliance_dashboard AS
+SELECT 
+    t.id as tenant_id,
+    t.name as tenant_name,
+    COUNT(DISTINCT dsr.id) as pending_requests,
+    COUNT(DISTINCT ct.id) as overdue_tasks,
+    MAX(audit.last_activity) as last_audit_activity
+FROM tenants t
+LEFT JOIN data_subject_requests dsr 
+    ON dsr.tenant_id = t.id AND dsr.status = 'PENDING'
+LEFT JOIN compliance_tasks ct 
+    ON ct.tenant_id = t.id AND ct.status = 'OVERDUE'
+LEFT JOIN (
+    SELECT tenant_id, MAX(created_at) as last_activity
+    FROM audit_log 
+    GROUP BY tenant_id
+) audit ON audit.tenant_id = t.id
+WHERE t.status = 'ACTIVE'
+GROUP BY t.id, t.name;
+
+-- Refresh programado cada 15 minutos
+-- SELECT cron.schedule('*/15 * * * *', 'REFRESH MATERIALIZED VIEW CONCURRENTLY compliance_dashboard;');
+```
+
+### **Para Actualizaciones en Tiempo Real:**
+```sql
+-- Tablas de resumen actualizadas por triggers
+CREATE TABLE real_time_compliance_metrics (
+    uuid tenant_id PK,
+    integer active_requests_count,
+    integer overdue_tasks_count,
+    timestamptz last_metric_update,
+    jsonb alert_status
+);
+
+-- Función para mantener métricas actualizadas
+CREATE OR REPLACE FUNCTION maintain_realtime_metrics()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Actualizar métricas en tiempo real
+    INSERT INTO real_time_compliance_metrics (tenant_id, active_requests_count, last_metric_update)
+    VALUES (NEW.tenant_id, 1, NOW())
+    ON CONFLICT (tenant_id) 
+    DO UPDATE SET 
+        active_requests_count = real_time_compliance_metrics.active_requests_count + 1,
+        last_metric_update = NOW();
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+## 🔄 **Flujo Completo de Consultas Híbridas**
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant A as API Gateway
+    participant C as Compliance Service
+    participant Q as Query Engine
+    participant R as Real-time Cache
+    participant D as Database
+    
+    U->>A: Solicitar reporte compliance
+    A->>C: /api/compliance/reports
+    
+    alt Consulta Bajo Demanda Compleja
+        C->>Q: Ejecutar query compleja
+        Q->>D: SELECT ... JOIN múltiples tablas
+        D->>Q: Resultados
+        Q->>C: Datos consolidados
+        C->>U: Reporte generado (2-5 segundos)
+    
+    else Consulta Estado Actual
+        C->>R: Obtener métricas tiempo real
+        R->>C: Datos cacheados (<100ms)
+        C->>U: Estado actual inmediato
+    
+    else Actualización por Evento
+        U->>A: Acción (ej: nuevo consentimiento)
+        A->>C: Procesar evento
+        C->>D: INSERT/UPDATE tabla compliance
+        D->>R: Invalidar cache / actualizar métricas
+        C->>U: Confirmación inmediata
+    end
+```
+
+## 🎯 **Recomendaciones de Implementación**
+
+### **1. Estrategias para Alto Rendimiento:**
+
+```yaml
+consultas_bajo_demanda:
+  optimizaciones:
+    - "Materialized views para reports complejos"
+    - "Índices covering para consultas frecuentes"
+    - "Particionado de tablas de alto volumen"
+    - "Connection pooling para múltiples consultas"
+
+actualizaciones_tiempo_real:
+  optimizaciones:
+    - "Triggers para métricas automáticas"
+    - "Message queue para procesamiento async"
+    - "Cache Redis para datos frecuentes"
+    - "Batch updates para operaciones masivas"
+```
+
+### **2. Plan de Escalabilidad:**
+
+```sql
+-- Configuración recomendada PostgreSQL
+ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
+ALTER SYSTEM SET work_mem = '256MB';
+ALTER SYSTEM SET maintenance_work_mem = '1GB';
+ALTER SYSTEM SET effective_cache_size = '8GB';
+
+-- Índices críticos para performance mixta
+CREATE INDEX CONCURRENTLY idx_compliance_tenant_status 
+ON data_subject_requests (tenant_id, status) 
+INCLUDE (received_at, request_type);
+
+CREATE INDEX CONCURRENTLY idx_audit_tenant_action 
+ON audit_log (tenant_id, action, created_at);
+```
+
+
