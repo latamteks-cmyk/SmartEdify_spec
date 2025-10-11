@@ -1,56 +1,85 @@
-# 🎯 Alcance del Servicio: Tenancy Service (3003)
+## 🎯 Alcance del Servicio: Tenancy Service (3003) — Versión Consolidada
 
-## 1. Propósito y Rol en el Ecosistema
+### 1. Propósito y Rol en el Ecosistema
 
-El **Tenancy Service** es la **“raíz de confianza organizacional”** de la plataforma SmartEdify. Su responsabilidad exclusiva es definir, gestionar y servir la jerarquía organizacional y jurídica del ecosistema:
+El **Tenancy Service** es la “raíz de confianza organizacional” de SmartEdify. Su responsabilidad exclusiva es definir, gestionar y servir la jerarquía organizacional y jurídica del ecosistema:
 
-**Tenant → Condominium → Building → Unit → Space**
+**Tenant → Condominium → Building → Unit → Subunit (Space)**
 
-Este servicio actúa como la fuente canónica de la verdad para la estructura física y legal, proveyendo el contexto indispensable sobre el cual operan todos los demás microservicios, desde la identidad hasta la gobernanza y las finanzas.
-
----
-
-## 2. Funcionalidades Dentro del Alcance (In Scope)
-
-- **Gestión de la Jerarquía Organizacional:**
-  - Operaciones CRUD completas para las entidades `Tenants`, `Condominiums`, `Buildings`, `Units` y `Spaces`.
-  - Mantenimiento de las relaciones y la cardinalidad entre estas entidades.
-
-- **Mapeo Jurisdiccional y de Residencia:**
-  - Asociación de cada `Condominium` a una jurisdicción legal específica (ej. `PE`, `BR`, `CL`).
-  - Asignación de una región de residencia de datos (`data_residency`) a nivel de `Tenant`.
-
-- **Aislamiento de Datos:**
-  - Propietario de la implementación de políticas **Row-Level Security (RLS)** en la base de datos, asegurando que cada consulta esté aislada por `tenant_id`.
-
-- **Orquestación de Cifrado:**
-  - Gestión del ciclo de vida de las claves de cifrado por tenant, delegando las operaciones criptográficas en sí a un **KMS/HSM**.
-
-- **Publicación de Eventos de Topología:**
-  - Emisión de eventos a través de Kafka (`tenancy.events`) para notificar a otros servicios sobre cambios en la estructura organizacional (ej. `CondominiumCreated`, `UnitReassigned`, `JurisdictionChanged`).
+Este servicio actúa como fuente canónica de la verdad para la estructura física y legal, proveyendo el contexto indispensable sobre el cual operan todos los demás microservicios, desde la identidad hasta la gobernanza, cumplimiento y finanzas.
 
 ---
 
-## 3. Funcionalidades Fuera de Alcance (Out of Scope)
+### 2. Funcionalidades Dentro del Alcance (In Scope)
 
-Para mantener un bajo acoplamiento y una alta cohesión, el Tenancy Service **NO** realiza las siguientes funciones:
+#### 🏢 Gestión Jerárquica
+- Operaciones CRUD completas para `tenants`, `condominiums`, `buildings`, `units`, `subunits`.
+- Validación de cardinalidad, integridad referencial y relaciones entre entidades.
+- Soporte para unidades privadas y subunidades comunes (`is_common_area`).
 
-- ❌ **No gestiona usuarios ni perfiles:** La información de usuarios, roles o permisos es responsabilidad del **`user-profiles-service`**.
-- ❌ **No gestiona autenticación ni sesiones:** La identidad digital y el ciclo de vida de los tokens son gestionados exclusivamente por el **`identity-service`**.
-- ❌ **No contiene lógica de negocio de dominios específicos:** No sabe qué es una "reserva", una "votación" o una "transacción financiera". Solo provee el contexto (`Unit`, `Space`) para que otros servicios actúen.
-- ❌ **No define políticas de cumplimiento:** Las reglas de negocio y normativas son definidas y evaluadas por el **`compliance-service`**.
+#### ⚖️ Mapeo Legal y Residencial
+- Asociación de `condominiums` a jurisdicciones legales (`PE`, `BR`, `CL`, etc.).
+- Asignación de `data_residency` por `tenant`, con trazabilidad legal y compatibilidad con el `Compliance Service`.
+
+#### 🔐 Aislamiento de Datos
+- Implementación de **Row-Level Security (RLS)** por `tenant_id` y `condominium_id`.
+- Validación de vistas, funciones y materialized views para respetar el contexto RLS.
+
+#### 🔑 Orquestación Criptográfica
+- Gestión del ciclo de vida de claves por tenant.
+- Delegación de operaciones criptográficas a KMS/HSM con rotación programada y respaldo legal.
+
+#### 📣 Publicación de Eventos
+- Emisión de eventos Kafka (`tenancy.events`) como:
+  - `TenantCreated`
+  - `CondominiumUpdated`
+  - `UnitReassigned`
+  - `JurisdictionChanged`
+- Triggers en base de datos para sincronización con otros servicios.
+
+#### 📊 Compatibilidad con Dashboards
+- Soporte para vistas materializadas como `tenancy_overview` y `compliance_dashboard`.
+- Estructura optimizada para consultas híbridas (bajo demanda + eventos).
 
 ---
 
-## 4. Dependencias Críticas
+### 3. Funcionalidades Fuera del Alcance (Out of Scope)
 
-- **Consumidores Principales:**
-  - **`identity-service`:** Consulta el `tenancy-service` para validar la pertenencia de un usuario a un tenant/condominio durante la autenticación.
-  - **`user-profiles-service`:** Se sincroniza con este servicio para vincular perfiles de usuario a unidades (`units`).
-  - **`governance-service`, `finance-service`, `asset-management-service`:** Consumen datos de la jerarquía para contextualizar sus operaciones.
+Para mantener bajo acoplamiento y alta cohesión, el Tenancy Service **NO** realiza:
 
-- **Servicios de Plataforma:**
-  - **`Kafka`:** Utilizado para la publicación asíncrona de eventos de cambio de topología.
-  - **`PostgreSQL`:** Utilizado como base de datos principal, con RLS habilitado.
-  - **`Redis`:** Para el cacheo de contexto de tenant y la invalidación distribuida.
-  - **`KMS/HSM`:** Para la gestión de claves de cifrado por tenant.
+- ❌ Gestión de usuarios, perfiles o roles (delegado al `User Profiles Service`).
+- ❌ Autenticación, sesiones o tokens (delegado al `Identity Service`).
+- ❌ Lógica de negocio de otros dominios (reservas, votaciones, pagos).
+- ❌ Evaluación de políticas legales o normativas (delegado al `Compliance Service`).
+
+---
+
+### 4. Dependencias Críticas
+
+#### 🔄 Consumidores Principales
+- `Identity Service`: valida pertenencia a tenant/condominio durante login.
+- `User Profiles Service`: vincula perfiles a unidades (`unit_id`) y cargos oficiales.
+- `Governance`, `Finance`, `Asset Management`: consumen jerarquía para contextualizar operaciones.
+
+#### 🧱 Servicios de Plataforma
+- `PostgreSQL`: base de datos principal con RLS habilitado.
+- `Kafka`: publicación de eventos de topología.
+- `Redis`: cache de contexto de tenant y invalidación distribuida.
+- `KMS/HSM`: gestión de claves por tenant con respaldo criptográfico.
+
+---
+
+### 5. Observaciones Técnicas y Recomendaciones
+
+| Área | Observación | Recomendación |
+|------|-------------|---------------|
+| **RLS** | Correctamente aplicado por `tenant_id` y `condominium_id`. | Validar que todas las vistas, funciones y materialized views respeten el contexto RLS. |
+| **Eventos Kafka** | Flujo de eventos está modelado. | Asegurar triggers para publicar `UnitCreated`, `JurisdictionChanged`, `TenantUpdated`. |
+| **Jerarquía** | Tablas reflejan la estructura física y legal. | Añadir validaciones de integridad entre `units` y `subunits`, y entre `buildings` y `condominiums`. |
+| **Jurisdicción** | Campo `jurisdiction` presente en `condominiums`. | Validar consistencia con `data_residency`, `timezone` y `compliance_requirements`. |
+| **Materialización** | Compatible con vistas para dashboards. | Implementar `tenancy_overview` como vista materializada con refresh programado. |
+| **Criptografía** | Delegación a KMS/HSM está definida. | Asegurar que las claves estén asociadas a `tenant_id` y que se respete la rotación de 90 días. |
+| **Cache Redis** | Utilizado para contexto de tenant. | Validar TTL e invalidación por eventos topológicos (`CondominiumUpdated`, `UnitReassigned`). |
+
+---
+
