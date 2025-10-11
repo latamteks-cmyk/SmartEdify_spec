@@ -5,13 +5,15 @@
 ### 1. Desnormalización de `tenant_id` y RLS Optimizado
 
 ```erDiagram
+   erDiagram
     %% =============================================
     %% IDENTITY SERVICE (3001) - Núcleo de Autenticación
     %% =============================================
+
     users {
         uuid id PK "UUID v4 global"
         citext email "Case-insensitive, único global"
-        text phone "Cifrado KMS (no almacenado en claro)"
+        text phone "Cifrado KMS"
         text global_status "ACTIVE, SUSPENDED, DELETED"
         timestamptz email_verified_at
         timestamptz created_at
@@ -34,10 +36,10 @@
         uuid tenant_id "Desnormalizado para RLS"
         text device_id
         text cnf_jkt "DPoP confirmation thumbprint"
-        timestamptz not_after "Clave para particionado"
+        timestamptz not_after
         timestamptz revoked_at
         integer version "Optimistic locking"
-        boolean storage_validation_passed "Validación explícita desde frontend"
+        boolean storage_validation_passed
         timestamptz created_at
     }
 
@@ -45,7 +47,7 @@
         uuid id PK
         uuid session_id FK
         text token_hash "SHA-256 irrevertible"
-        timestamptz expires_at "Clave para particionado"
+        timestamptz expires_at
         timestamptz created_at
     }
 
@@ -62,6 +64,7 @@
     %% =============================================
     %% USER PROFILES SERVICE (3002) - Identidad Funcional
     %% =============================================
+
     profiles {
         uuid id PK
         uuid user_id FK
@@ -79,7 +82,7 @@
 
     relation_types {
         uuid id PK
-        text code "OWNER, TENANT, FAMILY_MEMBER, BOARD_MEMBER, VENDOR"
+        text code "OWNER, TENANT, FAMILY_MEMBER, etc."
         text description
         text category "RESIDENT, STAFF, GOVERNANCE, EXTERNAL"
         boolean can_vote
@@ -90,7 +93,7 @@
     sub_relation_types {
         uuid id PK
         uuid relation_type_id FK
-        text code "PRIMARY_OWNER, CO_OWNER, SPOUSE, PRESIDENT, etc."
+        text code "PRIMARY_OWNER, CO_OWNER, SPOUSE, etc."
         text description
         integer weight
         jsonb inheritance_chain
@@ -155,6 +158,7 @@
     %% =============================================
     %% TENANCY SERVICE (3003) - Raíz Organizacional
     %% =============================================
+
     tenants {
         uuid id PK
         text name
@@ -222,6 +226,7 @@
     %% =============================================
     %% CUMPLIMIENTO Y AUDITORÍA
     %% =============================================
+
     compliance_tasks {
         uuid id PK
         uuid tenant_id "Desnormalizado para RLS"
@@ -247,6 +252,7 @@
     %% =============================================
     %% RELACIONES PRINCIPALES
     %% =============================================
+
     users ||--o{ user_tenant_assignments : "asignado_a"
     user_tenant_assignments }o--|| tenants : "pertenece_a"
     users ||--o{ sessions : "mantiene"
