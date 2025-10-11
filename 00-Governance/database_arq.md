@@ -1,3 +1,8 @@
+# Representación Gráfica Completa de las Bases de Datos SmartEdify
+
+## 🗂️ **Diagrama de Base de Datos por Servicio**
+
+```mermaid
 erDiagram
     %% =============================================
     %% IDENTITY SERVICE (3001) - Núcleo de Autenticación
@@ -400,3 +405,161 @@ erDiagram
     condominiums ||--o{ condominium_legal_records : "registrado_en"
     
     country_legal_templates ||--o{ compliance_requirements_tracking : "define"
+```
+
+## 🔐 **Esquema de Seguridad y RLS (Row Level Security)**
+
+```mermaid
+flowchart TD
+    subgraph SECURITY["Políticas de Seguridad por Servicio"]
+        subgraph IDENTITY_RLS["Identity Service RLS"]
+            A1["users: tenant_id = current_tenant_id()"]
+            A2["webauthn_credentials: user_id IN users del tenant"]
+            A3["sessions: tenant_id = current_tenant_id()"]
+            A4["feature_flags: tenant_id = current_tenant_id()"]
+        end
+
+        subgraph PROFILES_RLS["User Profiles Service RLS"]
+            B1["profiles: tenant_id = current_tenant_id()"]
+            B2["memberships: tenant_id = current_tenant_id()"]
+            B3["roles: tenant_id = current_tenant_id()"]
+            B4["role_assignments: tenant_id = current_tenant_id()"]
+        end
+
+        subgraph TENANCY_RLS["Tenancy Service RLS"]
+            C1["tenants: id = current_tenant_id()"]
+            C2["condominiums: tenant_id = current_tenant_id()"]
+            C3["buildings: condominium_id IN condominios del tenant"]
+            C4["units: building_id IN edificios del tenant"]
+        end
+    end
+
+    subgraph COMPLIANCE["Cumplimiento y Ciclo de Vida"]
+        D1["condominium_lifecycle_stages<br/>PRE_REGISTRATION → LEGAL_FORMALIZATION → OPERATIONAL"]
+        D2["compliance_requirements_tracking<br/>Seguimiento requisitos por país"]
+        D3["compliance_alerts<br/>Alertas proactivas faltantes legales"]
+        D4["country_legal_templates<br/>Plantillas por jurisdicción"]
+    end
+
+    SECURITY --> COMPLIANCE
+```
+
+## 📊 **Estructura Jerárquica Completa**
+
+```mermaid
+flowchart TB
+    T["Tenant<br/>Empresa Administradora<br/>o Condominio Individual"]
+    
+    T --> C1["Condominio A<br/>Etapa: OPERATIONAL"]
+    T --> C2["Condominio B<br/>Etapa: LEGAL_FORMALIZATION"]
+    T --> C3["Condominio C<br/>Etapa: PRE_REGISTRATION"]
+    
+    C1 --> B1A["Edificio Torre Norte<br/>15 pisos"]
+    C1 --> B1B["Edificio Torre Sur<br/>12 pisos"]
+    
+    B1A --> U1A1["Unidad 101<br/>Propietario: María Pérez"]
+    B1A --> U1A2["Unidad 102<br/>Propietario: Juan López"]
+    
+    U1A1 --> S1A1A["Subunidad Terraza<br/>Tipo: TERRACE"]
+    U1A1 --> S1A1B["Subunidad Balcón<br/>Tipo: BALCONY"]
+    
+    C2 --> COMPLIANCE_TRACK["Seguimiento Cumplimiento<br/>Requisitos Legales Pendientes"]
+    C3 --> ALERTS["Alertas Pre-registro<br/>Datos mínimos para empezar"]
+    
+    subgraph LEGAL["Estructura Legal y Fiscal"]
+        L1["Datos Fiscales Tenant<br/>RUC/NIF, Actividad Económica"]
+        L2["Representantes Legales<br/>Presidente, Administrador"]
+        L3["Registros Públicos<br/>SUNARP, RCBR, RPP"]
+        L4["Plantillas por País<br/>PE, CL, CO, MX, ES"]
+    end
+    
+    T --> LEGAL
+```
+
+## 🗃️ **Índices Críticos por Rendimiento**
+
+```sql
+-- Identity Service
+CREATE UNIQUE INDEX idx_users_tenant_email ON users(tenant_id, email);
+CREATE INDEX idx_sessions_tenant_user ON sessions(tenant_id, user_id);
+CREATE UNIQUE INDEX idx_feature_flags_tenant_name ON feature_flags(tenant_id, name);
+
+-- User Profiles Service  
+CREATE UNIQUE INDEX idx_profiles_tenant_email ON profiles(tenant_id, email);
+CREATE UNIQUE INDEX idx_memberships_profile_condominium_unit ON memberships(profile_id, condominium_id, unit_id);
+CREATE UNIQUE INDEX idx_roles_tenant_condominium_name ON roles(tenant_id, condominium_id, name);
+CREATE UNIQUE INDEX idx_role_assignments_profile_condominium_role ON role_assignments(profile_id, condominium_id, role_id);
+
+-- Tenancy Service
+CREATE INDEX idx_condominiums_tenant_stage ON condominiums(tenant_id, current_stage);
+CREATE INDEX idx_condominiums_compliance_status ON condominiums(compliance_status, next_compliance_deadline);
+CREATE INDEX idx_buildings_condominium ON buildings(condominium_id);
+CREATE INDEX idx_units_building ON units(building_id);
+CREATE INDEX idx_subunits_unit ON subunits(unit_id);
+
+-- Cumplimiento y Ciclo de Vida
+CREATE INDEX idx_compliance_tracking_condominium_status ON compliance_requirements_tracking(condominium_id, current_status);
+CREATE INDEX idx_compliance_alerts_condominium_severity ON compliance_alerts(condominium_id, alert_severity, status);
+CREATE INDEX idx_legal_representatives_tenant_condominium ON legal_representatives(tenant_id, condominium_id, status);
+CREATE INDEX idx_country_templates_country_type ON country_legal_templates(country_code, template_type, effective_from);
+```
+
+## 🔄 **Flujo de Datos entre Servicios**
+
+```mermaid
+flowchart LR
+    subgraph IDENTITY["Identity Service (3001)"]
+        A1[users]
+        A2[sessions]
+        A3[webauthn_credentials]
+    end
+
+    subgraph PROFILES["User Profiles Service (3002)"]
+        B1[profiles]
+        B2[memberships]
+        B3[roles]
+        B4[role_assignments]
+    end
+
+    subgraph TENANCY["Tenancy Service (3003)"]
+        C1[tenants]
+        C2[condominiums]
+        C3[buildings]
+        C4[units]
+        C5[compliance_tracking]
+    end
+
+    A1 -- "user_id" --> B1
+    B2 -- "condominium_id, unit_id" --> C2
+    C1 -- "tenant_id" --> A1
+    C1 -- "tenant_id" --> B1
+    C2 -- "compliance_status" --> C5
+    
+    style IDENTITY fill:#e1f5fe
+    style PROFILES fill:#f3e5f5  
+    style TENANCY fill:#fff3e0
+```
+
+## 🎯 **Resumen de Consideraciones Implementadas**
+
+### ✅ **Correcciones Aplicadas:**
+1. **Estandarización UUID**: Todos los IDs son `uuid` (corregido Tenancy Service)
+2. **Consistencia Temporal**: Todos los timestamps son `timestamptz`
+3. **RLS Completado**: Todas las tablas con políticas de aislamiento por `tenant_id`
+4. **Datos Legales**: Estructura completa para validez jurídica multijurisdiccional
+5. **Ciclo de Vida**: Soporte para etapas progresivas de formalización
+6. **Cumplimiento Proactivo**: Sistema de alertas y seguimiento de requisitos
+
+### 🛡️ **Características de Seguridad:**
+- **Aislamiento Multi-tenant**: RLS en todas las tablas
+- **Integridad Referencial**: Claves foráneas consistentes entre servicios
+- **Auditoría Completa**: Timestamps de creación y actualización
+- **Cumplimiento Legal**: Datos para validez jurídica por país
+
+### 🌍 **Escalabilidad Global:**
+- **Plantillas por País**: Configuración específica por jurisdicción
+- **Data Residency**: Metadatos de residencia de datos
+- **Multi-moneda**: Soporte para diferentes divisas
+- **Multi-jurisdicción**: Estructura adaptable a diferentes marcos legales
+
+Esta estructura proporciona una base sólida, segura y escalable para la plataforma SmartEdify, cumpliendo con todos los requisitos funcionales, legales y de seguridad identificados.
