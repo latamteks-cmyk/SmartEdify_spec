@@ -1,6 +1,4 @@
-# Versión Corregida - Sistema de Gestión de Condominios Cumplimiento Legal
-
-## 🏛️ Representación Gráfica del Modelo de Base de Datos Actualizado
+## 🏛️ Representación Gráfica del Modelo de Base de Datos
 
 ```mermaid
 erDiagram
