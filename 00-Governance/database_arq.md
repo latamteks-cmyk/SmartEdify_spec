@@ -461,7 +461,7 @@ flowchart TB
     B1A --> U1A2["Unidad 102<br/>Propietario: Juan López"]
     
     U1A1 --> S1A1A["Subunidad Estacionamiento<br/>Tipo: ESTACIONAMIENTO B-15"]
-    U1A1 --> S1A1B["Subunidad Depositon<br/>Tipo: DEPOSITO A-10"]
+    U1A1 --> S1A1B["Subunidad Deposito<br/>Tipo: DEPOSITO A-10"]
     
     C2 --> COMPLIANCE_TRACK["Seguimiento Cumplimiento<br/>Requisitos Legales Pendientes"]
     C3 --> ALERTS["Alertas Pre-registro<br/>Datos mínimos para empezar"]
