@@ -8,7 +8,7 @@ Claro. A continuación, se presenta la **versión corregida del archivo `databas
 
 ---
 
-```markdown
+
 # Representación Gráfica Completa Actualizada - SmartEdify Databases
 
 ## 🗂️ Diagrama ERD Completo Actualizado
@@ -512,7 +512,7 @@ ORDER BY c.name, d.expires_at;
 - **`refresh_tokens.condominium_id`**: Opcional. Si se proporciona, el token solo es válido en el contexto de ese condominio (usado en flujos como login desde app de condominio específico).
 - **`sessions.jurisdiction`**: Derivado de `condominiums.jurisdiction` al iniciar sesión. Usado por `compliance-service` para aplicar políticas correctas en tiempo real.
 
----
+
 
 Esta representación gráfica actualizada **cierra todos los gaps críticos** identificados y **refuerza la coherencia entre identidad, contexto organizacional y cumplimiento legal** en entornos multi-tenant y multi-jurisdicción.
 ```
