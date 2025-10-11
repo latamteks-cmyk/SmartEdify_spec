@@ -1,11 +1,7 @@
-# SmartEdify · Arquitectura de Datos Actualizada (Implementación Completa)
+# Representación Gráfica del Modelo de Base de Datos
 
-## 🔄 Modificaciones Implementadas
-
-### 1. Desnormalización de `tenant_id` y RLS Optimizado
-
-```erDiagram
-   erDiagram
+```mermaid
+erDiagram
     %% =============================================
     %% IDENTITY SERVICE (3001) - Núcleo de Autenticación
     %% =============================================
@@ -275,3 +271,96 @@
     profiles ||--o{ delegations : "delega_a"
     profiles ||--o{ communication_consents : "consiente"
 ```
+
+## Diagrama de Arquitectura de Microservicios
+
+```mermaid
+graph TB
+    subgraph "Arquitectura de Microservicios"
+        IDENTITY[Identity Service<br/>:3001]
+        PROFILES[User Profiles Service<br/>:3002]
+        TENANCY[Tenancy Service<br/>:3003]
+        
+        subgraph "Base de Datos"
+            DB1[(Identity DB)]
+            DB2[(Profiles DB)]
+            DB3[(Tenancy DB)]
+        end
+        
+        subgraph "Clientes"
+            WEB[Web Frontend]
+            MOBILE[Mobile App]
+            ADMIN[Admin Portal]
+        end
+    end
+
+    WEB --> IDENTITY
+    MOBILE --> IDENTITY
+    ADMIN --> IDENTITY
+    IDENTITY --> PROFILES
+    IDENTITY --> TENANCY
+    PROFILES --> TENANCY
+    
+    IDENTITY --> DB1
+    PROFILES --> DB2
+    TENANCY --> DB3
+```
+
+## Flujo de Autenticación y Autorización
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant I as Identity Service
+    participant P as Profiles Service
+    participant T as Tenancy Service
+    
+    C->>I: Login (email/password)
+    I->>I: Validar credenciales
+    I->>I: Generar session + tokens
+    I->>P: Obtener perfiles del usuario
+    I->>C: Devolver tokens + perfiles
+    
+    C->>T: Request con JWT
+    T->>I: Validar token
+    I->>T: Token válido + datos usuario
+    T->>T: Aplicar RLS por tenant_id
+    T->>C: Datos solicitados
+```
+
+## Jerarquía Organizacional
+
+```mermaid
+graph TD
+    subgraph "Jerarquía Multi-Tenant"
+        T1[Tenant<br/>Empresa Admin]
+        T2[Tenant<br/>Condominio A]
+        T3[Tenant<br/>Condominio B]
+        
+        T1 --> C1[Condominio X]
+        T1 --> C2[Condominio Y]
+        T2 --> C3[Condominio Z]
+        
+        C1 --> B1[Edificio A]
+        C1 --> B2[Edificio B]
+        
+        B1 --> U1[Unidad 101]
+        B1 --> U2[Unidad 102]
+        
+        U1 --> S1[Subunidad P-101]
+        U1 --> S2[Subunidad S-101]
+    end
+```
+
+## Características Clave Visualizadas:
+
+1. **Separación por Servicios**: Cada microservicio tiene su propio contexto
+2. **Multi-tenancy**: `tenant_id` presente en todas las tablas principales
+3. **Seguridad en Capas**: 
+   - Identity (autenticación)
+   - Profiles (autorización funcional)
+   - RLS (seguridad a nivel de fila)
+4. **Jerarquía Flexible**: Tenant → Condominio → Edificio → Unidad → Subunidad
+5. **Sistema de Relaciones Complejo**: Tipos y subtipos de membresías
+
+¿Te gustaría que profundice en alguna parte específica del diagrama o genere visualizaciones adicionales para algún componente en particular?
