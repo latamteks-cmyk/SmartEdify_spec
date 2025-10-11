@@ -659,15 +659,3 @@ WHERE d.expires_at > NOW()
 AND d.revoked_at IS NULL
 ORDER BY c.name, d.expires_at;
 ```
-
-## 📝 Notas Técnicas Adicionales
-
-- **`profiles.user_id`**: Apunta a `users.id` global. En entornos con sharding global, la integridad referencial se garantiza a nivel de aplicación, no mediante FK estricta.
-- **`storage_validation_passed`**: Solo se establece en `true` si el frontend envía el header `X-Storage-Validated: true` durante el login.
-- **`refresh_tokens.condominium_id`**: Opcional. Si se proporciona, el token solo es válido en el contexto de ese condominio.
-- **`sessions.jurisdiction`**: Derivado de `condominiums.jurisdiction` al iniciar sesión. Usado por `compliance-service` para aplicar políticas correctas en tiempo real.
-
----
-
-Esta representación gráfica actualizada **cierra todos los gaps críticos** identificados y **refuerza la coherencia entre identidad, contexto organizacional y cumplimiento legal** en entornos multi-tenant y multi-jurisdicción.
-```
