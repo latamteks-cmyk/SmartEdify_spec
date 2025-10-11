@@ -1,14 +1,3 @@
-Claro. A continuación, se presenta la **versión corregida del archivo `database_arq.md`**, actualizada para cerrar los gaps identificados, especialmente:
-
-- Añadir **`jurisdiction` en `sessions`** para soporte de cumplimiento en tiempo real.
-- Incluir **`condominium_id` opcional en `refresh_tokens`** para flujos contextuales por condominio.
-- Agregar tabla **`delegations`** en `user_profiles` para apoderados temporales.
-- Clarificar el contrato de **`storage_validation_passed`**.
-- Corregir la relación entre `profiles.user_id` y `users.id` con una nota de coherencia referencial en entornos globales.
-
----
-
-
 # Representación Gráfica Completa Actualizada - SmartEdify Databases
 
 ## 🗂️ Diagrama ERD Completo Actualizado
@@ -471,19 +460,185 @@ Claro. A continuación, se presenta la **versión corregida del archivo `databas
 
 ## 🏗️ Diagrama de Jerarquía Organizacional
 
-*(Sin cambios respecto a la versión anterior — sigue siendo correcto y coherente)*
+```mermaid
+flowchart TB
+    subgraph GLOBAL[ "Nivel Global - Identity Service "]
+        U1[Usuario: carlos.rodriguez@empresa.com]
+        U2[Usuario: elena.garcia@email.com]
+        U3[Usuario: miguel.rodriguez@email.com]
+    end
+
+    subgraph TENANTS[ "Tenants - Multi-Organización "]
+        T1[Administradora Primavera SA <br/>Tenant Type: ADMIN_COMPANY]
+        T2[Condominio Vista Alegre <br/>Tenant Type: INDIVIDUAL_CONDOMINIUM]
+        T3[Sky Towers Management <br/>Tenant Type: ADMIN_COMPANY]
+    end
+
+    subgraph C1[ "Condominio: Edificio Aurora "]
+        B1A[Torre Principal <br/>15 pisos]
+        B1B[Torre Secundaria <br/>12 pisos]
+        
+        B1A --> U101[Unidad 101 <br/>Tipo: RESIDENTIAL]
+        U101 --> S101P[Subunidad P-101 <br/>Tipo: PARKING]
+        U101 --> S101D[Subunidad D-101 <br/>Tipo: STORAGE]
+        
+        B1A --> U115[Unidad 1501 <br/>Tipo: PENTHOUSE]
+        U115 --> S115P1[Subunidad P-1501 <br/>Tipo: PARKING]
+        U115 --> S115P2[Subunidad P-1502 <br/>Tipo: PARKING]
+    end
+
+    subgraph C2[ "Condominio: Vista Alegre "]
+        B2A[Edificio Único <br/>5 pisos]
+        B2A --> U201[Unidad Casa 01 <br/>Tipo: RESIDENTIAL]
+        U201 --> S201J[Subunidad J-01 <br/>Tipo: GARDEN]
+    end
+
+    subgraph C3[ "Condominio: Sky Tower Miami "]
+        B3A[Main Tower <br/>25 pisos]
+        B3A --> U301[Unidad 3201 <br/>Tipo: COMMERCIAL]
+    end
+
+    %% Relaciones de usuarios con tenants
+    U1 --> T1
+    U1 --> T2
+    U1 --> T3
+    U2 --> T1
+    U2 --> T2
+    U3 --> T1
+
+    %% Relaciones de tenants con condominios
+    T1 --> C1
+    T1 --> C2
+    T2 --> C2
+    T3 --> C3
+
+    %% Estilos
+    classDef user fill:#e1f5fe,stroke:#01579b
+    classDef tenant fill:#f3e5f5,stroke:#4a148c
+    classDef condominium fill:#fff3e0,stroke:#e65100
+    classDef building fill:#f1f8e9,stroke:#33691e
+    classDef unit fill:#e0f2f1,stroke:#004d40
+    classDef subunit fill:#fce4ec,stroke:#880e4f
+    
+    class U1,U2,U3 user
+    class T1,T2,T3 tenant
+    class C1,C2,C3 condominium
+    class B1A,B1B,B2A,B3A building
+    class U101,U115,U201,U301 unit
+    class S101P,S101D,S115P1,S115P2,S201J subunit
+```
 
 ## 🔐 Esquema de Seguridad Multi-Tenant
 
-*(Sin cambios — RLS ya cubre correctamente todos los niveles)*
+```mermaid
+flowchart TD
+    subgraph IDENTITY_SEC[ "Identity Service Security "]
+        A1[RLS: users - por user_id]
+        A2[RLS: sessions - por tenant_id + user_id]
+        A3[RLS: user_tenant_assignments - por user_id]
+        A4[RLS: feature_flags - por tenant_id]
+    end
+
+    subgraph PROFILES_SEC[ "User Profiles Security "]
+        B1[RLS: profiles - por tenant_id]
+        B2[RLS: memberships - por tenant_id]
+        B3[RLS: roles - por tenant_id + condominium_id]
+        B4[RLS: role_assignments - por tenant_id]
+        B5[RLS: delegations - por tenant_id]
+    end
+
+    subgraph TENANCY_SEC[ "Tenancy Service Security "]
+        C1[RLS: tenants - por tenant_id]
+        C2[RLS: condominiums - por tenant_id]
+        C3[RLS: buildings - por condominium_id en tenant]
+        C4[RLS: units - por building_id en tenant]
+        C5[RLS: subunits - por unit_id en tenant]
+    end
+
+    subgraph COMPLIANCE_SEC[ "Compliance Security "]
+        D1[RLS: compliance_alerts - por tenant_id]
+        D2[RLS: legal_representatives - por tenant_id]
+        D3[RLS: country_legal_templates - por country_code]
+    end
+
+    A1 --> A2
+    A2 --> A3
+    A3 --> A4
+    
+    B1 --> B2
+    B2 --> B3
+    B3 --> B4
+    B4 --> B5
+    
+    C1 --> C2
+    C2 --> C3
+    C3 --> C4
+    C4 --> C5
+    
+    D1 --> D2
+    D2 --> D3
+
+    classDef rls fill:#fff3e0,stroke:#e65100
+    class A1,A2,A3,A4,B1,B2,B3,B4,B5,C1,C2,C3,C4,C5,D1,D2,D3 rls
+```
 
 ## 🔄 Flujo de Datos entre Servicios
 
-*(Actualizado implícitamente por nuevas relaciones)*
+```mermaid
+flowchart LR
+    subgraph IDENTITY[ "Identity Service (3001) "]
+        A1[users]
+        A2[user_tenant_assignments]
+        A3[sessions]
+    end
+
+    subgraph PROFILES[ "User Profiles Service (3002) "]
+        B1[profiles]
+        B2[memberships]
+        B3[relation_types]
+        B4[roles]
+        B5[delegations]
+    end
+
+    subgraph TENANCY[ "Tenancy Service (3003) "]
+        C1[tenants]
+        C2[condominiums]
+        C3[buildings]
+        C4[units]
+        C5[subunits]
+    end
+
+    subgraph COMPLIANCE[ "Compliance Engine "]
+        D1[country_legal_templates]
+        D2[compliance_requirements_tracking]
+        D3[compliance_alerts]
+    end
+
+    %% Flujos principales
+    A1 -- "user_id" --> B1
+    A2 -- "tenant_id" --> C1
+    B1 -- "profile_id" --> B2
+    B2 -- "condominium_id, unit_id" --> C2
+    C2 -- "jurisdiction" --> D1
+    D1 -- "requirements" --> D2
+    D2 -- "alerts" --> D3
+    
+    %% Flujos secundarios
+    A3 -- "tenant_id" --> C1
+    A3 -- "jurisdiction" --> D1
+    B2 -- "relation types" --> B3
+    B4 -- "role assignments" --> B2
+    B5 -- "delegations" --> B2
+    
+    style IDENTITY fill:#e1f5fe
+    style PROFILES fill:#f3e5f5
+    style TENANCY fill:#fff3e0
+    style COMPLIANCE fill:#f1f8e9
+```
 
 ## 📊 Mockup de Datos - Escenario Real Completo
 
-*(Sin cambios — los ejemplos siguen siendo válidos)*
+*(Sin cambios — los ejemplos siguen siendo válidos y coherentes con el modelo actualizado)*
 
 ## 🎯 Consultas de Ejemplo para Escenarios Complejos
 
@@ -507,12 +662,12 @@ ORDER BY c.name, d.expires_at;
 
 ## 📝 Notas Técnicas Adicionales
 
-- **`profiles.user_id`**: Apunta a `users.id` global. En entornos con sharding global, la integridad referencial se garantiza a nivel de aplicación, no mediante FK estricta, para permitir replicación multi-región.
-- **`storage_validation_passed`**: Solo se establece en `true` si el frontend envía el header `X-Storage-Validated: true` durante el login. De lo contrario, permanece en `false`.
-- **`refresh_tokens.condominium_id`**: Opcional. Si se proporciona, el token solo es válido en el contexto de ese condominio (usado en flujos como login desde app de condominio específico).
+- **`profiles.user_id`**: Apunta a `users.id` global. En entornos con sharding global, la integridad referencial se garantiza a nivel de aplicación, no mediante FK estricta.
+- **`storage_validation_passed`**: Solo se establece en `true` si el frontend envía el header `X-Storage-Validated: true` durante el login.
+- **`refresh_tokens.condominium_id`**: Opcional. Si se proporciona, el token solo es válido en el contexto de ese condominio.
 - **`sessions.jurisdiction`**: Derivado de `condominiums.jurisdiction` al iniciar sesión. Usado por `compliance-service` para aplicar políticas correctas en tiempo real.
 
-
+---
 
 Esta representación gráfica actualizada **cierra todos los gaps críticos** identificados y **refuerza la coherencia entre identidad, contexto organizacional y cumplimiento legal** en entornos multi-tenant y multi-jurisdicción.
 ```
