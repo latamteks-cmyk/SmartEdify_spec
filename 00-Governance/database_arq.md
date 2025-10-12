@@ -401,7 +401,7 @@ graph TB
 
 ### 1. Identity Service (3001) - Datos Actualizados
 
-#### **users** (Sin cambios críticos)
+#### **users**
 ```json
 {
   "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
@@ -415,7 +415,7 @@ graph TB
 
 ### 2. Tenancy Service (3003) - Estructura con Cumplimiento
 
-#### **tenants** (Mejorado con datos legales)
+#### **tenants**
 ```json
 {
   "id": "t1e2n3a4-n5t6-7890-tenant-00123456789",
@@ -435,7 +435,7 @@ graph TB
 }
 ```
 
-#### **condominiums** (Sin cambios críticos)
+#### **condominiums**
 ```json
 {
   "id": "c1o2n3d4-o5m6-7890-condo-001234567",
@@ -460,7 +460,7 @@ graph TB
 
 ### 3. User Profiles Service (3002) - Con Protección de Datos
 
-#### **profiles** (Mejorado con aceptación Habeas Data)
+#### **profiles**
 ```json
 {
   "id": "p1r2o3f4-i5l6-7890-prof-0012345678",
@@ -489,7 +489,7 @@ graph TB
 }
 ```
 
-#### **sensitive_data_categories** (NUEVA - Datos sensibles separados)
+#### **sensitive_data_categories** (Datos sensibles separados)
 ```json
 {
   "id": "s1e2n3s4-d5a6-7890-sens-001234567",
@@ -504,7 +504,7 @@ graph TB
 }
 ```
 
-#### **communication_consents** (Mejorado con base legal)
+#### **communication_consents** 
 ```json
 {
   "id": "c1o2m3m4-c5o6-7890-consent-0123",
@@ -523,7 +523,7 @@ graph TB
 
 ### 4. Nuevas Tablas de Cumplimiento Legal
 
-#### **data_subject_requests** (NUEVA - Gestión de derechos ARSULIPO)
+#### **data_subject_requests** 
 ```json
 {
   "id": "d1a2t3a4-s5u6-7890-request-01234",
@@ -563,7 +563,7 @@ graph TB
 }
 ```
 
-#### **ccpa_opt_outs** (NUEVA - Opt-out California)
+#### **ccpa_opt_outs** 
 ```json
 {
   "id": "c1c2p3a4-o5p6-7890-optout-0123",
@@ -575,7 +575,7 @@ graph TB
 }
 ```
 
-#### **data_processing_agreements** (NUEVA - Encargados tratamiento)
+#### **data_processing_agreements**
 ```json
 {
   "id": "d1a2t3a4-p5r6-7890-agreement-012",
@@ -590,7 +590,7 @@ graph TB
 }
 ```
 
-#### **impact_assessments** (NUEVA - EIPD/EIVD)
+#### **impact_assessments**
 ```json
 {
   "id": "i1m2p3a4-c5t6-7890-impact-01234",
