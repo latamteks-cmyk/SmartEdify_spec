@@ -67,3 +67,35 @@ Este plan de pruebas busca validar que el `tenancy-service` funcione como la "ra
 - **Pruebas de Carga:** k6, Grafana k6-dashboard.
 - **Chaos Engineering:** Gremlin, Istio Fault Injection.
 - **Entorno:** Pipeline de CI/CD en GitLab que despliega en un entorno de `staging` para la ejecución de pruebas automatizadas.
+
+
+---
+
+## ✅ Actualizaciones según Arquitectura de Base de Datos v2.2 (2025-10-13)
+
+### 🔐 Validación Extendida de RLS
+- Se incorporan pruebas para verificar que `tenant_id` y `condominium_id` estén presentes y correctamente aplicados en todas las entidades descendientes (`buildings`, `units`, `subunits`).
+- Se validan vistas, funciones y materialized views bajo contexto RLS.
+
+### 📡 Eventos Kafka Adicionales
+- Se añaden pruebas para verificar la publicación de eventos:
+  - `UnitCreated`
+  - `TenantUpdated`
+  - `JurisdictionChanged`
+  - `SubunitAssigned`
+
+### 🧪 Pruebas de Metadatos Extendidos
+- Se validan los campos extendidos en `data_residency`:
+  - `complianceFrameworks`
+  - `retentionPolicy`
+  - `replicationRegions`
+- Se verifica que estos metadatos estén presentes en los payloads y se respeten en las respuestas de la API.
+
+### 🧩 Pruebas de Integración con OpenAPI
+- Se valida que el campo `updatedAt` esté presente en el esquema `Tenant`.
+- Se verifica que los contratos estén sincronizados con el modelo DBML.
+
+---
+
+## ✅ Estado Final
+Este plan de pruebas ha sido actualizado para reflejar completamente la arquitectura de base de datos v2.2 y está listo para ejecución en entorno de staging.
