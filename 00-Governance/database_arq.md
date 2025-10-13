@@ -568,3 +568,51 @@ No se aplicará particionado por `created_at` en la tabla `condominiums`.
 ## ✅ Estado Final
 Este documento consolida la arquitectura de base de datos para la Fase 1, lista para producción.
 
+
+
+---
+
+## 🧩 Tablas de Feature Flags por Servicio (v2.2.1)
+
+Como parte de la arquitectura modular de SmartEdify, se han definido tablas específicas para la gestión de **feature flags por servicio**, permitiendo control granular de funcionalidades activas por tenant y por módulo.
+
+### 🎯 Propósito
+- Activar/desactivar funcionalidades sin despliegue.
+- Controlar acceso condicional por tenant.
+- Facilitar pruebas A/B y despliegues progresivos.
+
+### 🗂️ Tablas Incluidas
+- `feature_flags_user_profile`
+- `feature_flags_identity`
+- `feature_flags_compliance`
+- `feature_flags_tenancy`
+
+### 🧬 Estructura SQL General
+```sql
+CREATE TABLE feature_flags_<servicio> (
+    id UUID PRIMARY KEY,
+    tenant_id UUID REFERENCES tenants(id),
+    feature_name TEXT NOT NULL,
+    enabled BOOLEAN DEFAULT false,
+    configuration JSONB,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+### 🔗 Relaciones
+- Cada tabla se relaciona con `tenants` mediante `tenant_id`.
+- Las aplicaciones cliente consultan estas tablas para activar/desactivar funcionalidades dinámicamente.
+
+### 📌 Ejemplo de Consulta
+```sql
+SELECT feature_name, enabled
+FROM feature_flags_user_profile
+WHERE tenant_id = '11111111-1111-1111-1111-111111111111';
+```
+
+### 🛠️ Recomendaciones Técnicas
+- Indexar por `(tenant_id, feature_name)` para mejorar rendimiento.
+- Auditar cambios críticos en `audit_log`.
+- Usar `configuration` para parámetros adicionales (por ejemplo, límites, variantes, condiciones).
+
+---
