@@ -73,3 +73,36 @@ Este plan de pruebas tiene como objetivo validar la correcta implementación del
 - **Pruebas de API y Carga:** k6, Postman/Newman.
 - **Chaos Engineering:** Gremlin, Istio Fault Injection.
 - **Entorno:** Pipeline de CI/CD en GitLab que despliega en un entorno de `staging` para la ejecución de pruebas automatizadas.
+
+
+---
+
+## ✅ Actualizaciones según Arquitectura de Base de Datos v2.2 (2025-10-13)
+
+### 🔐 Validación Extendida de RLS
+- Confirmación de que todas las tablas (`profiles`, `memberships`, `roles`, `role_assignments`, `profile_entitlements`, `communication_consents`) tienen RLS activo por `tenant_id`.
+- Se recomienda agregar validación cruzada por `condominium_id` en vistas y funciones.
+
+### 🧩 Campos explícitos añadidos
+- `tenant_id` y `condominium_id` están presentes en todas las entidades relacionales.
+- Esto permite trazabilidad directa, simplifica políticas RLS y mejora el rendimiento de consultas.
+
+### 📣 Eventos Kafka extendidos
+- Se añaden eventos:
+  - `DelegationMisuseDetected`
+  - `ConsentPolicyVersionMismatch`
+  - `MembershipConflictResolved`
+
+### 📄 Alineación con DBML y OpenAPI
+- El modelo DBML actualizado refleja todas las relaciones y claves necesarias.
+- El contrato OpenAPI incluye ahora `updatedAt` en `Profile` y metadatos extendidos en `Consent`.
+
+### 🧠 Recomendaciones técnicas adicionales
+- Validar que `responsible_profile_id` pertenezca al mismo `condominium_id`.
+- Confirmar que `unit_id` con `kind='COMMON'` no admita membresías de tipo `OWNER`, `TENANT`, `CONVIVIENTE`.
+- Asegurar que los triggers de validación estén activos y auditados.
+
+---
+
+## ✅ Estado Final
+Este plan de pruebas ha sido actualizado para reflejar completamente la arquitectura de base de datos v2.2 y está listo para ejecución en entorno de staging.
