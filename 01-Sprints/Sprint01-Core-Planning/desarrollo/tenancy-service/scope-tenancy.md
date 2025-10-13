@@ -83,3 +83,32 @@ Para mantener bajo acoplamiento y alta cohesión, el Tenancy Service **NO** real
 
 ---
 
+
+
+---
+
+### 🆕 Actualizaciones según Arquitectura de Base de Datos v2.2 (2025-10-13)
+
+#### ✅ Campos explícitos añadidos
+- Todas las entidades descendientes (`buildings`, `units`, `subunits`) ahora incluyen explícitamente `tenant_id` y `condominium_id`.
+- Esto mejora la trazabilidad directa, simplifica las políticas RLS y optimiza las consultas.
+
+#### ✅ Nuevos eventos Kafka definidos
+- `UnitCreated`
+- `TenantUpdated`
+- `JurisdictionChanged`
+- `SubunitAssigned`
+
+#### ✅ Alineación con DBML y OpenAPI
+- El modelo DBML actualizado refleja todas las relaciones y claves necesarias.
+- El contrato OpenAPI incluye ahora `updatedAt` en `Tenant` y metadatos extendidos en `DataResidency` (`complianceFrameworks`, `retentionPolicy`, `replicationRegions`).
+
+#### ✅ Recomendaciones técnicas adicionales
+- Validar que `subunits` tengan integridad referencial con `units` y `condominiums`.
+- Asegurar que `data_residency` esté sincronizado con `jurisdiction`, `timezone` y `compliance_requirements`.
+- Confirmar que los triggers de eventos estén activos y auditados.
+
+---
+
+### ✅ Estado Final
+Este documento ha sido actualizado para reflejar completamente la arquitectura de base de datos v2.2 y está listo para implementación en producción.
