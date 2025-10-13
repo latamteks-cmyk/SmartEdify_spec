@@ -1,32 +1,19 @@
+
 openapi: 3.1.0
 info:
   title: SmartEdify - User Profiles Service
-  version: '3.1'
-  description: API para gestionar la identidad funcional y relacional de los usuarios de SmartEdify, incluyendo perfiles, membresías, roles y permisos.
+  version: '2.2'
+  description: API para gestionar perfiles funcionales, membresías, roles, consentimientos y delegaciones en SmartEdify.
   contact:
     email: arquitectura@smartedify.global
 servers:
-  - url: https://api.smartedify.global/profiles
+  - url: https://api.smartedify.global/user-profiles
     description: Servidor de producción
-
 paths:
-  /api/v1/user-profiles/me:
+  /v1/profiles/{profile_id}:
     get:
-      summary: Obtener Mi Perfil
-      description: Retorna el perfil completo del usuario autenticado, incluyendo membresías, roles y entitlements.
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Perfil del usuario.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfile'
-
-  /api/v1/user-profiles/{profile_id}:
-    get:
-      summary: Obtener un Perfil de Usuario
+      summary: Obtener perfil de usuario
+      description: Devuelve el perfil completo incluyendo membresías, roles y consentimientos.
       parameters:
         - name: profile_id
           in: path
@@ -36,78 +23,86 @@ paths:
             format: uuid
       responses:
         '200':
-          description: Detalles del perfil.
+          description: Perfil encontrado.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
-
-  /api/v1/user-profiles/{profile_id}/memberships:
+                $ref: '#/components/schemas/Profile'
+  /v1/profiles/{profile_id}/memberships:
     get:
-      summary: Listar Membresías de un Perfil
-      parameters:
-        - name: profile_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+      summary: Listar membresías de un perfil
       responses:
         '200':
-          description: Lista de membresías.
-
-  /api/v1/user-profiles/evaluate:
-    post:
-      summary: Evaluar Permisos
-      description: Evalúa si un perfil tiene un permiso específico en un contexto dado, delegando la decisión en el PDP central.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                profile_id:
-                  type: string
-                condominium_id:
-                  type: string
-                permission:
-                  type: string
-      responses:
-        '200':
-          description: Resultado de la evaluación.
+          description: Lista de membresías
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  allowed:
-                    type: boolean
-
+                type: array
+                items:
+                  $ref: '#/components/schemas/Membership'
 components:
   schemas:
-    UserProfile:
+    Profile:
       type: object
       properties:
         id:
           type: string
           format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        condominiumId:
+          type: string
+          format: uuid
         email:
           type: string
-          format: email
-        full_name:
+        phone:
+          type: string
+        fullName:
           type: string
         status:
           type: string
-        memberships:
-          type: array
-          items: {}
-        roles:
-          type: array
-          items: {}
-
+        countryCode:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Membership:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        condominiumId:
+          type: string
+          format: uuid
+        unitId:
+          type: string
+          format: uuid
+        relation:
+          type: string
+        privileges:
+          type: object
+        responsibleProfileId:
+          type: string
+          format: uuid
+        since:
+          type: string
+          format: date-time
+        until:
+          type: string
+          format: date-time
+        status:
+          type: string
     Problem:
       type: object
-      description: "RFC 7807 Problem Details"
+      description: RFC 7807 Problem Details
       properties:
         type:
           type: string
@@ -120,16 +115,14 @@ components:
           type: string
         instance:
           type: string
-
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-    dpop:
-      type: http
-      scheme: dpop
-
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+  dpop:
+    type: http
+    scheme: dpop
 security:
   - bearerAuth: []
   - dpop: []
