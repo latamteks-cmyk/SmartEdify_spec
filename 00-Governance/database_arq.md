@@ -383,3 +383,67 @@ Este documento define una **arquitectura de base de datos madura, segura y escal
 ---
 
 *Documento alineado con el Vision Document v1.1 y listo para implementación en entornos de desarrollo y producción.*
+
+
+---
+
+## 🆕 Actualizaciones v2.2 — 2025-10-13
+
+### ✅ Nuevas Tablas Agregadas
+- `policy_cache`
+- `consent_audit_log`
+- `outbox_identity`
+- `outbox_profiles`
+- `backup_snapshots`
+- `rls_test_cases`
+- `audit_alerts`
+
+### ✅ Función de Validación de Hash-Chain
+```sql
+CREATE OR REPLACE FUNCTION validate_hash_chain() RETURNS BOOLEAN AS $$
+DECLARE
+    prev_hash BYTEA;
+    valid BOOLEAN := TRUE;
+BEGIN
+    FOR record IN SELECT id, hash_prev FROM audit_log ORDER BY created_at ASC LOOP
+        IF prev_hash IS NOT NULL AND record.hash_prev != prev_hash THEN
+            valid := FALSE;
+            EXIT;
+        END IF;
+        prev_hash := record.hash_prev;
+    END LOOP;
+    RETURN valid;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### ✅ Test Case de RLS
+```sql
+INSERT INTO rls_test_cases (id, tenant_id, table_name, test_query, expected_result)
+VALUES (
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    '33333333-3333-3333-3333-333333333333',
+    'profiles',
+    'SELECT * FROM profiles WHERE tenant_id = current_setting('app.current_tenant')::UUID;',
+    '1 row'
+);
+```
+
+### ✅ Mockup de Datos
+Archivo: `SmartEdify_Fase1_Mockup.json`
+Contiene datos simulados para la tabla `profiles` con cifrado simulado y timestamps.
+
+### ❌ Decisión sobre Particionado
+No se aplicará particionado por `created_at` en la tabla `condominiums`.
+
+---
+
+## 📦 Archivos Complementarios
+- `SmartEdify_Fase1_DDL.sql`: DDL completo con nuevas tablas y funciones.
+- `SmartEdify_Fase1_Mockup.json`: Datos simulados para pruebas y documentación.
+
+---
+
+## ✅ Estado Final
+Este documento consolida la arquitectura de base de datos para la Fase 1, lista para producción.
+
