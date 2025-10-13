@@ -41,41 +41,31 @@ Incorpora todas las observaciones técnicas críticas:
 ### 2.1 Diagrama ER Completo (v2.1)
 
 ```mermaid
+---
+config:
+  layout: elk
+---
 erDiagram
-erDiagram
-    %% =============================================
-    %% DEFINICIÓN DE TIPOS ENUMERADOS (Compartidos)
-    %% =============================================
     status_t {
         string status_t
     }
-    
     country_code_t {
         string country_code_t
     }
-    
     sensitive_category_t {
         string sensitive_category_t
     }
-    
     legal_basis_t {
         string legal_basis_t
     }
-    
     request_type_t {
         string request_type_t
     }
-
-    %% =============================================
-    %% SERVICIO DE IDENTIDAD (3001)
-    %% =============================================
-    subgraph IdentityService["SERVICIO DE IDENTIDAD (3001)"]
         users ||--o{ user_tenant_assignments : "asignado_a"
         users ||--o{ sessions : "mantiene"
         sessions ||--o{ refresh_tokens : "posee"
         users ||--o{ profiles : "tiene_perfiles_en"
         tenants ||--o{ feature_flags : "configura"
-
         users {
             uuid id PK
             citext email
@@ -84,7 +74,6 @@ erDiagram
             timestamptz email_verified_at
             timestamptz created_at
         }
-        
         tenants {
             uuid id PK
             text name
@@ -98,7 +87,6 @@ erDiagram
             timestamptz created_at
             timestamptz updated_at
         }
-        
         user_tenant_assignments {
             uuid id PK
             uuid user_id FK
@@ -109,7 +97,6 @@ erDiagram
             timestamptz removed_at
             jsonb tenant_specific_settings
         }
-        
         sessions {
             uuid id PK
             uuid user_id FK
@@ -122,7 +109,6 @@ erDiagram
             boolean storage_validation_passed
             timestamptz created_at
         }
-        
         refresh_tokens {
             uuid id PK
             uuid session_id FK
@@ -130,7 +116,6 @@ erDiagram
             timestamptz expires_at
             timestamptz created_at
         }
-
         feature_flags {
             uuid id PK
             uuid tenant_id FK
@@ -139,12 +124,6 @@ erDiagram
             jsonb configuration
             timestamptz created_at
         }
-    end
-
-    %% =============================================
-    %% SERVICIO DE PERFILES DE USUARIO (3002)
-    %% =============================================
-    subgraph UserProfilesService["SERVICIO DE PERFILES (3002)"]
         profiles ||--o{ sensitive_data_categories : "tiene_datos_sensibles"
         profiles ||--o{ memberships : "tiene_membresias_en"
         profiles ||--o{ role_assignments : "asignado"
@@ -153,7 +132,6 @@ erDiagram
         relation_types ||--o{ sub_relation_types : "tiene_subtipos"
         memberships }o--|| relation_types : "tipo_relacion"
         memberships }o--|| sub_relation_types : "subtipo_relacion"
-
         profiles {
             uuid id PK
             uuid user_id FK
@@ -170,7 +148,6 @@ erDiagram
             timestamptz updated_at
             timestamptz deleted_at
         }
-        
         sensitive_data_categories {
             uuid id PK
             uuid profile_id FK
@@ -181,7 +158,6 @@ erDiagram
             timestamptz expires_at
             boolean active
         }
-        
         memberships {
             uuid id PK
             uuid tenant_id FK
@@ -196,20 +172,17 @@ erDiagram
             timestamptz until
             status_t status
         }
-        
         relation_types {
             uuid id PK
             text name
             text description
         }
-        
         sub_relation_types {
             uuid id PK
             uuid relation_type_id FK
             text name
             text description
         }
-        
         role_assignments {
             uuid id PK
             uuid profile_id FK
@@ -218,7 +191,6 @@ erDiagram
             timestamptz revoked_at
             status_t status
         }
-        
         delegations {
             uuid id PK
             uuid delegator_profile_id FK
@@ -228,7 +200,6 @@ erDiagram
             timestamptz end_date
             status_t status
         }
-        
         communication_consents {
             uuid id PK
             uuid profile_id FK
@@ -237,18 +208,11 @@ erDiagram
             timestamptz consented_at
             timestamptz revoked_at
         }
-    end
-
-    %% =============================================
-    %% SERVICIO DE TENENCIA (3003)
-    %% =============================================
-    subgraph TenancyService["SERVICIO DE TENENCIA (3003)"]
         tenants ||--o{ condominiums : "administra"
         condominiums ||--o{ buildings : "contiene"
         buildings ||--o{ units : "compone"
         units ||--o{ subunits : "tiene_asociadas"
         tenants ||--o{ roles : "define_roles"
-
         condominiums {
             uuid id PK
             uuid tenant_id FK
@@ -261,7 +225,6 @@ erDiagram
             timestamptz created_at
             timestamptz updated_at
         }
-        
         buildings {
             uuid id PK
             uuid condominium_id FK
@@ -272,7 +235,6 @@ erDiagram
             status_t status
             timestamptz created_at
         }
-        
         units {
             uuid id PK
             uuid building_id FK
@@ -283,7 +245,6 @@ erDiagram
             status_t status
             timestamptz created_at
         }
-        
         subunits {
             uuid id PK
             uuid unit_id FK
@@ -292,7 +253,6 @@ erDiagram
             decimal area
             status_t status
         }
-        
         roles {
             uuid id PK
             uuid tenant_id FK
@@ -300,12 +260,6 @@ erDiagram
             jsonb permissions
             timestamptz created_at
         }
-    end
-
-    %% =============================================
-    %% SERVICIO DE COMPLIANCE & AUDITORÍA (3012)
-    %% =============================================
-    subgraph ComplianceService["SERVICIO COMPLIANCE & AUDIT (3012)"]
         tenants ||--o{ data_subject_requests : "tiene_solicitudes"
         profiles ||--o{ data_subject_requests : "solicita"
         tenants ||--o{ data_bank_registrations : "registra_banco"
@@ -314,7 +268,6 @@ erDiagram
         tenants ||--o{ impact_assessments : "realiza_evaluaciones"
         tenants ||--o{ compliance_tasks : "gestiona_tareas"
         tenants ||--o{ audit_log : "genera_logs"
-
         audit_log {
             uuid id PK
             uuid tenant_id FK
@@ -329,7 +282,6 @@ erDiagram
             bytea hash_prev
             bytea signature
         }
-        
         data_subject_requests {
             uuid id PK
             uuid tenant_id FK
@@ -342,7 +294,6 @@ erDiagram
             timestamptz resolved_at
             boolean identity_verified
         }
-        
         data_bank_registrations {
             uuid id PK
             uuid tenant_id FK
@@ -352,7 +303,6 @@ erDiagram
             timestamptz expiry_date
             status_t status
         }
-        
         ccpa_opt_outs {
             uuid id PK
             uuid tenant_id FK
@@ -361,7 +311,6 @@ erDiagram
             timestamptz opted_out_at
             text reason
         }
-        
         data_processing_agreements {
             uuid id PK
             uuid tenant_id FK
@@ -372,7 +321,6 @@ erDiagram
             status_t status
             jsonb terms
         }
-        
         impact_assessments {
             uuid id PK
             uuid tenant_id FK
@@ -382,7 +330,6 @@ erDiagram
             jsonb findings
             status_t status
         }
-        
         compliance_tasks {
             uuid id PK
             uuid tenant_id FK
@@ -393,98 +340,12 @@ erDiagram
             status_t status
             uuid assigned_to FK
         }
-    end
-
-    %% =============================================
-    %% RELACIONES CRUZADAS ENTRE SERVICIOS
-    %% =============================================
-    
-    %% Identity Service -> User Profiles Service
     users ||--o{ profiles : "tiene_perfiles"
-    
-    %% Identity Service -> Tenancy Service  
     tenants ||--o{ condominiums : "administra"
-    
-    %% User Profiles Service -> Tenancy Service
     profiles ||--o{ memberships : "en_condominios"
     roles ||--o{ role_assignments : "asignado_a_perfiles"
-    
-    %% Todos los servicios -> Compliance Service
     tenants ||--o{ audit_log : "auditados"
     profiles ||--o{ data_subject_requests : "solicitan_datos"
-%% =============================================
-%% ENTIDADES NUEVAS EN v2.2
-%% =============================================
-policy_cache {
-  uuid id PK
-  uuid tenant_id FK
-  text policy_name
-  text policy_version
-  text law_reference
-  date effective_from
-  timestamptz cached_at
-}
-
-consent_audit_log {
-  uuid id PK
-  uuid profile_id FK
-  uuid tenant_id FK
-  text action
-  text category
-  text legal_basis
-  timestamptz timestamp
-  uuid performed_by
-}
-
-outbox_identity {
-  uuid id PK
-  uuid aggregate_id
-  text event_type
-  jsonb payload
-  timestamptz occurred_at
-  boolean published
-}
-
-outbox_profiles {
-  uuid id PK
-  uuid aggregate_id
-  text event_type
-  jsonb payload
-  timestamptz occurred_at
-  boolean published
-}
-
-backup_snapshots {
-  uuid id PK
-  timestamptz snapshot_time
-  text snapshot_location
-  text initiated_by
-  boolean restore_point
-}
-
-rls_test_cases {
-  uuid id PK
-  uuid tenant_id
-  text table_name
-  text test_query
-  text expected_result
-  timestamptz executed_at
-}
-
-audit_alerts {
-  uuid id PK
-  uuid tenant_id
-  text alert_type
-  text description
-  timestamptz detected_at
-}
-%% =============================================
-%% NOTAS OPERATIVAS
-%% =============================================
-%% Función validate_hash_chain() definida en base de datos para verificar integridad de audit_log.
-%% Test case de RLS incluido en rls_test_cases para validar aislamiento por tenant.
-%% Decisión: No se aplica particionado por created_at en condominiums.
-%% Mockup de datos disponible en archivo SmartEdify_Fase1_Mockup.json.
 ```
 
 ---
