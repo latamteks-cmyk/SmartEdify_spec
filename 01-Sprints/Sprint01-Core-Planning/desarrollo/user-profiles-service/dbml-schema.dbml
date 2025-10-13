@@ -1,3 +1,9 @@
+
+//// -----------------------------------------------------------
+//// Actualización DBML v2.2 — User Profiles Service
+//// Fecha: 2025-10-13
+//// Fuente: Arquitectura de Base de Datos v2.2 + OpenAPI + SAD
+//// -----------------------------------------------------------
 //// -----------------------------------------------------------
 //// DBML (Database Markup Language) para User Profiles Service
 //// Fuente: Especificacion_Tecnica_Final_user-profiles-service.md, Sección 5
@@ -109,4 +115,9 @@ Table policy_bindings {
 
 Note 'Todas las tablas deben estar protegidas por RLS basado en tenant_id.' {
   color: '#f8a540'
+}
+
+
+Note 'Actualizado para reflejar RLS extendido, campos explícitos de tenant_id y condominium_id, alineación con OpenAPI v2.2 y eventos Kafka definidos.' {
+  color: '#1d96b2'
 }
