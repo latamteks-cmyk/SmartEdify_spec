@@ -2,27 +2,27 @@ openapi: 3.1.0
 info:
   title: SmartEdify - Tenancy Service
   version: '1.3'
-  description: API para gestionar la jerarquía organizacional de SmartEdify (Tenants, Condominiums, Buildings, Units, Spaces).
+  description: "API para gestionar la jerarqu\xEDa organizacional de SmartEdify (Tenants,\
+    \ Condominiums, Buildings, Units, Spaces)."
   contact:
     email: arquitectura@smartedify.global
 servers:
-  - url: https://api.smartedify.global/tenancy
-    description: Servidor de producción
-
+- url: https://api.smartedify.global/tenancy
+  description: "Servidor de producci\xF3n"
 paths:
   /v1/tenants:
     get:
       summary: Listar Tenants
       description: Obtiene una lista paginada de tenants, con filtros opcionales.
       parameters:
-        - name: jurisdiction
-          in: query
-          schema:
-            type: string
-        - name: status
-          in: query
-          schema:
-            type: string
+      - name: jurisdiction
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
       responses:
         '200':
           description: Lista de tenants.
@@ -32,7 +32,7 @@ paths:
                 $ref: '#/components/schemas/TenantListResponse'
     post:
       summary: Crear un nuevo Tenant
-      description: Crea una nueva organización tenant en la plataforma.
+      description: "Crea una nueva organizaci\xF3n tenant en la plataforma."
       requestBody:
         required: true
         content:
@@ -52,18 +52,17 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-
   /v1/tenants/{tenant_id}:
     get:
       summary: Obtener un Tenant
-      description: Obtiene los detalles de un tenant específico por su ID.
+      description: "Obtiene los detalles de un tenant espec\xEDfico por su ID."
       parameters:
-        - name: tenant_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
       responses:
         '200':
           description: Detalles del Tenant.
@@ -73,7 +72,6 @@ paths:
                 $ref: '#/components/schemas/Tenant'
         '404':
           description: Tenant no encontrado.
-
 components:
   schemas:
     Tenant:
@@ -95,14 +93,16 @@ components:
           format: date-time
         dataResidency:
           $ref: '#/components/schemas/DataResidency'
-
+        updatedAt:
+          type: string
+          format: date-time
     CreateTenantRequest:
       type: object
       required:
-        - name
-        - legalName
-        - jurisdictionRoot
-        - dataResidency
+      - name
+      - legalName
+      - jurisdictionRoot
+      - dataResidency
       properties:
         name:
           type: string
@@ -112,7 +112,6 @@ components:
           type: string
         dataResidency:
           $ref: '#/components/schemas/DataResidency'
-
     DataResidency:
       type: object
       properties:
@@ -120,7 +119,16 @@ components:
           type: string
         jurisdiction:
           type: string
-
+        complianceFrameworks:
+          type: array
+          items:
+            type: string
+        retentionPolicy:
+          type: string
+        replicationRegions:
+          type: array
+          items:
+            type: string
     TenantListResponse:
       type: object
       properties:
@@ -137,10 +145,9 @@ components:
               type: integer
             total:
               type: integer
-
     Problem:
       type: object
-      description: "RFC 7807 Problem Details"
+      description: RFC 7807 Problem Details
       properties:
         type:
           type: string
@@ -153,7 +160,6 @@ components:
           type: string
         instance:
           type: string
-
   securitySchemes:
     bearerAuth:
       type: http
@@ -162,7 +168,6 @@ components:
     dpop:
       type: http
       scheme: dpop
-
 security:
-  - bearerAuth: []
-  - dpop: []
+- bearerAuth: []
+- dpop: []
