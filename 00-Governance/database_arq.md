@@ -42,6 +42,7 @@ Incorpora todas las observaciones técnicas críticas:
 
 ```mermaid
 erDiagram
+erDiagram
     %% =============================================
     %% DEFINICIÓN DE TIPOS ENUMERADOS (Compartidos)
     %% =============================================
@@ -411,6 +412,79 @@ erDiagram
     %% Todos los servicios -> Compliance Service
     tenants ||--o{ audit_log : "auditados"
     profiles ||--o{ data_subject_requests : "solicitan_datos"
+%% =============================================
+%% ENTIDADES NUEVAS EN v2.2
+%% =============================================
+policy_cache {
+  uuid id PK
+  uuid tenant_id FK
+  text policy_name
+  text policy_version
+  text law_reference
+  date effective_from
+  timestamptz cached_at
+}
+
+consent_audit_log {
+  uuid id PK
+  uuid profile_id FK
+  uuid tenant_id FK
+  text action
+  text category
+  text legal_basis
+  timestamptz timestamp
+  uuid performed_by
+}
+
+outbox_identity {
+  uuid id PK
+  uuid aggregate_id
+  text event_type
+  jsonb payload
+  timestamptz occurred_at
+  boolean published
+}
+
+outbox_profiles {
+  uuid id PK
+  uuid aggregate_id
+  text event_type
+  jsonb payload
+  timestamptz occurred_at
+  boolean published
+}
+
+backup_snapshots {
+  uuid id PK
+  timestamptz snapshot_time
+  text snapshot_location
+  text initiated_by
+  boolean restore_point
+}
+
+rls_test_cases {
+  uuid id PK
+  uuid tenant_id
+  text table_name
+  text test_query
+  text expected_result
+  timestamptz executed_at
+}
+
+audit_alerts {
+  uuid id PK
+  uuid tenant_id
+  text alert_type
+  text description
+  timestamptz detected_at
+}
+%% =============================================
+%% NOTAS OPERATIVAS
+%% =============================================
+%% Función validate_hash_chain() definida en base de datos para verificar integridad de audit_log.
+%% Test case de RLS incluido en rls_test_cases para validar aislamiento por tenant.
+%% Decisión: No se aplica particionado por created_at en condominiums.
+%% Mockup de datos disponible en archivo SmartEdify_Fase1_Mockup.json.
 ```
 
 ---
