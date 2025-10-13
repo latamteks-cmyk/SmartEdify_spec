@@ -833,3 +833,36 @@ CREATE POLICY profiles_tenant_isolation ON profiles
 ---
 
 Este documento reemplaza cualquier versión anterior de `user-profiles-service.md` y debe usarse como **fuente canónica** para diseño, implementación y operación del servicio en SmartEdify.
+
+
+---
+
+## ✅ Actualizaciones según Arquitectura de Base de Datos v2.2 (2025-10-13)
+
+### 🔐 Validación Extendida de RLS
+- Confirmación de que todas las tablas (`profiles`, `memberships`, `roles`, `role_assignments`, `profile_entitlements`, `communication_consents`) tienen RLS activo por `tenant_id`.
+- Se recomienda agregar validación cruzada por `condominium_id` en vistas y funciones.
+
+### 🧩 Campos explícitos añadidos
+- `tenant_id` y `condominium_id` están presentes en todas las entidades relacionales.
+- Esto permite trazabilidad directa, simplifica políticas RLS y mejora el rendimiento de consultas.
+
+### 📣 Eventos Kafka extendidos
+- Se añaden eventos:
+  - `DelegationMisuseDetected`
+  - `ConsentPolicyVersionMismatch`
+  - `MembershipConflictResolved`
+
+### 📜 Alineación con DBML y OpenAPI
+- El modelo DBML actualizado refleja todas las relaciones y claves necesarias.
+- El contrato OpenAPI incluye ahora `updatedAt` en `Profile` y metadatos extendidos en `Consent`.
+
+### 🧪 Recomendaciones técnicas adicionales
+- Validar que `responsible_profile_id` pertenezca al mismo `condominium_id`.
+- Confirmar que `unit_id` con `kind='COMMON'` no admita membresías de tipo `OWNER`, `TENANT`, `CONVIVIENTE`.
+- Asegurar que los triggers de validación estén activos y auditados.
+
+---
+
+## ✅ Estado Final
+Este documento ha sido actualizado para reflejar completamente la arquitectura de base de datos v2.2 y está listo para implementación en producción.
