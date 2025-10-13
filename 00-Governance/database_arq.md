@@ -399,6 +399,7 @@ Este documento define una **arquitectura de base de datos madura, segura y escal
 - `audit_alerts`
 
 ### ✅ Función de Validación de Hash-Chain
+
 ```sql
 CREATE OR REPLACE FUNCTION validate_hash_chain() RETURNS BOOLEAN AS $$
 DECLARE
