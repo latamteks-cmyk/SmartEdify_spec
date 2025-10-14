@@ -1215,7 +1215,304 @@ Ref: data_subject_requests.request_type > request_type_t.request_type_t
 ### 📋 Mockup Data with Real Examples
 
 ```sql
+-- =============================================
+-- 🏛️ SMARTEDIFY - COMPLETE MOCKUP DATA
+-- =============================================
 
+-- 📊 ENUM DATA (Domain Definitions)
+INSERT INTO status_t (status_t) VALUES 
+('active'), ('inactive'), ('suspended'), ('pending'), ('deleted');
+
+INSERT INTO country_code_t (country_code_t) VALUES 
+('PE'), ('US'), ('CO'), ('BR'), ('MX'), ('ES');
+
+INSERT INTO sensitive_category_t (sensitive_category_t) VALUES 
+('health'), ('biometric'), ('financial'), ('location'), ('religious'), ('political');
+
+INSERT INTO legal_basis_t (legal_basis_t) VALUES 
+('consent'), ('contract'), ('legal_obligation'), ('vital_interest'), ('legitimate_interest');
+
+INSERT INTO request_type_t (request_type_t) VALUES 
+('access'), ('rectification'), ('erasure'), ('restriction'), ('portability');
+
+-- 🟠 TENANTS (Real Peruvian Companies)
+INSERT INTO tenants (id, name, legal_name, tenant_type, jurisdiction_root, status, data_residency, dpo_contact, international_transfers, created_at) VALUES
+('55555555-5555-5555-5555-555555555555', 'Edificio Miraflores', 'Miraflores Tower S.A.C.', 'residential', 'PE', 'active', 'PE-LMA', 'dpo@miraflorestower.com', false, '2024-01-01 00:00:00+00'),
+('66666666-6666-6666-6666-666666666666', 'Condominio San Isidro', 'San Isidro Properties S.A.', 'commercial', 'PE', 'active', 'PE-LMA', 'proteccion.datos@sanisidroprops.com', true, '2024-01-02 00:00:00+00'),
+('77777777-7777-7777-7777-777777777777', 'Residencial La Molina', 'La Molina Real Estate S.A.C.', 'mixed', 'PE', 'active', 'PE-LMA', 'privacidad@lamolinarealestate.com', false, '2024-01-03 00:00:00+00');
+
+-- 🔵 USERS (Real Peruvian Users)
+INSERT INTO users (id, email, phone, global_status, email_verified_at, created_at) VALUES
+('11111111-1111-1111-1111-111111111111', 'maria.gonzalez@email.com', '+51987654321', 'active', '2025-01-10 14:30:00+00', '2025-01-10 14:25:00+00'),
+('22222222-2222-2222-2222-222222222222', 'carlos.rodriguez@email.com', '+51987654322', 'active', '2025-01-11 09:15:00+00', '2025-01-11 09:10:00+00'),
+('33333333-3333-3333-3333-333333333333', 'ana.martinez@email.com', '+51987654323', 'active', '2025-01-12 11:20:00+00', '2025-01-12 11:15:00+00'),
+('44444444-4444-4444-4444-444444444444', 'juan.perez@email.com', '+51987654324', 'pending', NULL, '2025-01-13 16:45:00+00'),
+('55555555-5555-5555-5555-555555555555', 'lucia.fernandez@email.com', '+51987654325', 'active', '2025-01-14 08:30:00+00', '2025-01-14 08:25:00+00');
+
+-- 🔵 USER_TENANT_ASSIGNMENTS
+INSERT INTO user_tenant_assignments (id, user_id, tenant_id, status, default_role, assigned_at, tenant_specific_settings) VALUES
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'active', 'RESIDENT', '2025-01-10 14:35:00+00', '{"language": "es", "notifications": true}'),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '22222222-2222-2222-2222-222222222222', '55555555-5555-5555-5555-555555555555', 'active', 'ADMIN', '2025-01-11 09:20:00+00', '{"language": "es", "reports_access": true}'),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', '33333333-3333-3333-3333-333333333333', '66666666-6666-6666-6666-666666666666', 'active', 'RESIDENT', '2025-01-12 11:25:00+00', '{"language": "en", "notifications": true}'),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', '44444444-4444-4444-4444-444444444444', '55555555-5555-5555-5555-555555555555', 'pending', 'RESIDENT', '2025-01-13 16:50:00+00', '{"language": "es", "notifications": false}');
+
+-- 🔵 SESSIONS
+INSERT INTO sessions (id, user_id, tenant_id, device_id, cnf_jkt, not_after, version, storage_validation_passed, created_at) VALUES
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'iphone-13-maria', 'abc123jkt', '2025-01-17 14:35:00+00', 1, true, '2025-01-10 14:40:00+00'),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', '22222222-2222-2222-2222-222222222222', '55555555-5555-5555-5555-555555555555', 'samsung-s21-carlos', 'def456jkt', '2025-01-18 09:20:00+00', 1, true, '2025-01-11 09:25:00+00');
+
+-- 🔵 REFRESH_TOKENS
+INSERT INTO refresh_tokens (id, session_id, token_hash, expires_at, created_at) VALUES
+('gggggggg-gggg-gggg-gggg-gggggggggggg', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'hashed_refresh_token_123', '2025-02-10 14:40:00+00', '2025-01-10 14:40:00+00'),
+('hhhhhhhh-hhhh-hhhh-hhhh-hhhhhhhhhhhh', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'hashed_refresh_token_456', '2025-02-11 09:25:00+00', '2025-01-11 09:25:00+00');
+
+-- 🟢 PROFILES (Complete Peruvian Citizen Profiles)
+INSERT INTO profiles (id, user_id, tenant_id, email, phone, full_name, status, country_code, personal_data, habeas_data_acceptance, habeas_data_accepted_at, created_at) VALUES
+('77777777-7777-7777-7777-777777777777', '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 
+ 'maria.gonzalez@email.com', '+51987654321', 'María González López', 'active', 'PE', 
+ '{"document_type": "DNI", "document_number": "encrypted_12345678", "birth_date": "1985-03-15", "gender": "F", "nationality": "PE", "occupation": "Arquitecta"}', 
+ true, '2025-01-10 14:40:00+00', '2025-01-10 14:35:00+00'),
+ 
+('88888888-8888-8888-8888-888888888888', '22222222-2222-2222-2222-222222222222', '55555555-5555-5555-5555-555555555555',
+ 'carlos.rodriguez@email.com', '+51987654322', 'Carlos Rodríguez Vargas', 'active', 'PE',
+ '{"document_type": "DNI", "document_number": "encrypted_87654321", "birth_date": "1990-07-22", "gender": "M", "nationality": "PE", "occupation": "Ingeniero"}',
+ true, '2025-01-11 09:25:00+00', '2025-01-11 09:20:00+00'),
+ 
+('99999999-9999-9999-9999-999999999999', '33333333-3333-3333-3333-333333333333', '66666666-6666-6666-6666-666666666666',
+ 'ana.martinez@email.com', '+51987654323', 'Ana Martínez Ruiz', 'active', 'PE',
+ '{"document_type": "DNI", "document_number": "encrypted_45678912", "birth_date": "1988-11-30", "gender": "F", "nationality": "PE", "occupation": "Abogada"}',
+ true, '2025-01-12 11:25:00+00', '2025-01-12 11:20:00+00');
+
+-- 🟢 SENSITIVE_DATA_CATEGORIES (Specific Consents)
+INSERT INTO sensitive_data_categories (id, profile_id, category, legal_basis, purpose, consent_given_at, expires_at, active) VALUES
+('cccccccc-cccc-cccc-cccc-cccccccccccc', '77777777-7777-7777-7777-777777777777', 'health', 'consent', 'emergency_medical_services', '2025-01-10 14:45:00+00', '2026-01-10 14:45:00+00', true),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', '88888888-8888-8888-8888-888888888888', 'financial', 'contract', 'rental_payment_processing', '2025-01-11 09:30:00+00', '2026-01-11 09:30:00+00', true),
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '77777777-7777-7777-7777-777777777777', 'location', 'consent', 'delivery_services', '2025-01-10 14:50:00+00', '2026-01-10 14:50:00+00', true),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', '99999999-9999-9999-9999-999999999999', 'biometric', 'consent', 'building_access_control', '2025-01-12 11:30:00+00', '2026-01-12 11:30:00+00', true);
+
+-- 🟢 COMMUNICATION_CONSENTS
+INSERT INTO communication_consents (id, profile_id, channel, consented, consented_at) VALUES
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '77777777-7777-7777-7777-777777777777', 'email', true, '2025-01-10 14:50:00+00'),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '77777777-7777-7777-7777-777777777777', 'sms', false, '2025-01-10 14:50:00+00'),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', '88888888-8888-8888-8888-888888888888', 'email', true, '2025-01-11 09:35:00+00'),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', '88888888-8888-8888-8888-888888888888', 'push', true, '2025-01-11 09:35:00+00');
+
+-- 🟠 CONDOMINIUMS (Real Properties in Lima)
+INSERT INTO condominiums (id, tenant_id, name, jurisdiction, timezone, currency, address, status, created_at) VALUES
+('11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 
+ 'Residencial San Isidro', 'PE-LMA', 'America/Lima', 'PEN',
+ '{"street": "Av. Javier Prado Este 1234", "district": "San Isidro", "city": "Lima", "country": "PE", "postal_code": "15076"}',
+ 'active', '2024-06-01 00:00:00+00'),
+ 
+('22222222-2222-2222-2222-222222222222', '66666666-6666-6666-6666-666666666666',
+ 'Torres de La Molina', 'PE-LMA', 'America/Lima', 'PEN',
+ '{"street": "Av. La Molina 3456", "district": "La Molina", "city": "Lima", "country": "PE", "postal_code": "15026"}',
+ 'active', '2024-07-01 00:00:00+00');
+
+-- 🟠 BUILDINGS
+INSERT INTO buildings (id, condominium_id, name, address_line, floors, amenities, status, created_at) VALUES
+('33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 
+ 'Torre A', 'Av. Javier Prado Este 1234', 15, 
+ '{"pool": true, "gym": true, "security": true, "parking": true, "concierge": true}',
+ 'active', '2024-06-01 00:00:00+00'),
+ 
+('44444444-4444-4444-4444-444444444444', '11111111-1111-1111-1111-111111111111',
+ 'Torre B', 'Av. Javier Prado Este 1234', 12,
+ '{"pool": true, "gym": true, "security": true, "parking": true, "playground": true}',
+ 'active', '2024-06-01 00:00:00+00');
+
+-- 🟠 UNITS
+INSERT INTO units (id, building_id, unit_number, unit_type, area, bedrooms, status, created_at) VALUES
+('55555555-5555-5555-5555-555555555555', '33333333-3333-3333-3333-333333333333', 
+ '1501', 'apartment', 120.5, 3, 'active', '2024-06-01 00:00:00+00'),
+ 
+('66666666-6666-6666-6666-666666666666', '33333333-3333-3333-3333-333333333333',
+ '1502', 'apartment', 95.0, 2, 'active', '2024-06-01 00:00:00+00'),
+ 
+('77777777-7777-7777-7777-777777777777', '44444444-4444-4444-4444-444444444444',
+ '801', 'apartment', 150.0, 4, 'active', '2024-06-01 00:00:00+00');
+
+-- 🟠 SUBUNITS
+INSERT INTO subunits (id, unit_id, subunit_number, subunit_type, area, status) VALUES
+('88888888-8888-8888-8888-888888888888', '55555555-5555-5555-5555-555555555555',
+ 'P001', 'parking', 12.5, 'active'),
+ 
+('99999999-9999-9999-9999-999999999999', '55555555-5555-5555-5555-555555555555',
+ 'D001', 'storage', 8.0, 'active');
+
+-- 🟠 ROLES
+INSERT INTO roles (id, tenant_id, name, permissions, created_at) VALUES
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '55555555-5555-5555-5555-555555555555',
+ 'RESIDENT', '{"read_own_data": true, "submit_requests": true, "view_community": true}', '2024-06-01 00:00:00+00'),
+ 
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '55555555-5555-5555-5555-555555555555',
+ 'ADMIN', '{"read_all_data": true, "manage_users": true, "view_reports": true, "configure_system": true}', '2024-06-01 00:00:00+00'),
+ 
+('cccccccc-cccc-cccc-cccc-cccccccccccc', '55555555-5555-5555-5555-555555555555',
+ 'MANAGER', '{"read_condo_data": true, "manage_facilities": true, "view_financials": true}', '2024-06-01 00:00:00+00');
+
+-- 🟠 RELATION_TYPES
+INSERT INTO relation_types (id, name, description) VALUES
+('dddddddd-dddd-dddd-dddd-dddddddddddd', 'owner', 'Propietario de la unidad'),
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'tenant', 'Inquilino o arrendatario'),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', 'family', 'Familiar del propietario');
+
+-- 🟠 SUB_RELATION_TYPES
+INSERT INTO sub_relation_types (id, relation_type_id, name, description) VALUES
+('11111111-1111-1111-1111-111111111111', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'primary_owner', 'Propietario principal'),
+('22222222-2222-2222-2222-222222222222', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'co_owner', 'Co-propietario'),
+('33333333-3333-3333-3333-333333333333', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'primary_tenant', 'Inquilino principal');
+
+-- 🟠 MEMBERSHIPS
+INSERT INTO memberships (id, tenant_id, profile_id, condominium_id, unit_id, relation_type_id, sub_relation_type_id, privileges, since, status) VALUES
+('44444444-4444-4444-4444-444444444444', '55555555-5555-5555-5555-555555555555',
+ '77777777-7777-7777-7777-777777777777', '11111111-1111-1111-1111-111111111111', 
+ '55555555-5555-5555-5555-555555555555', 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+ '11111111-1111-1111-1111-111111111111', '{"voting_rights": true, "facility_access": true}', 
+ '2024-01-01 00:00:00+00', 'active'),
+ 
+('55555555-5555-5555-5555-555555555555', '55555555-5555-5555-5555-555555555555',
+ '88888888-8888-8888-8888-888888888888', '11111111-1111-1111-1111-111111111111',
+ '66666666-6666-6666-6666-666666666666', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+ '33333333-3333-3333-3333-333333333333', '{"facility_access": true}', 
+ '2024-02-01 00:00:00+00', 'active');
+
+-- 🟠 ROLE_ASSIGNMENTS
+INSERT INTO role_assignments (id, profile_id, role_id, assigned_at, status) VALUES
+('66666666-6666-6666-6666-666666666666', '77777777-7777-7777-7777-777777777777',
+ 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '2024-01-01 00:00:00+00', 'active'),
+ 
+('77777777-7777-7777-7777-777777777777', '88888888-8888-8888-8888-888888888888',
+ 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '2024-02-01 00:00:00+00', 'active');
+
+-- 🟠 DELEGATIONS
+INSERT INTO delegations (id, delegator_profile_id, delegate_profile_id, role_id, start_date, end_date, status) VALUES
+('88888888-8888-8888-8888-888888888888', '77777777-7777-7777-7777-777777777777',
+ '88888888-8888-8888-8888-888888888888', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+ '2025-01-01 00:00:00+00', '2025-01-31 23:59:59+00', 'active');
+
+-- 🔴 DATA_SUBJECT_REQUESTS (Real GDPR Requests)
+INSERT INTO data_subject_requests (id, tenant_id, profile_id, request_type, status, request_data, received_at, identity_verified) VALUES
+('99999999-9999-9999-9999-999999999999', '55555555-5555-5555-5555-555555555555',
+ '77777777-7777-7777-7777-777777777777', 'access', 'pending', 
+ '{"reason": "Verificar datos personales almacenados", "scope": "all_personal_data"}',
+ '2025-01-15 10:30:00+00', true),
+ 
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '55555555-5555-5555-5555-555555555555',
+ '88888888-8888-8888-8888-888888888888', 'erasure', 'in_progress',
+ '{"reason": "Cierre de cuenta y eliminación de datos", "scope": "marketing_data"}',
+ '2025-01-16 14:20:00+00', true);
+
+-- 🔴 DATA_BANK_REGISTRATIONS
+INSERT INTO data_bank_registrations (id, tenant_id, registration_number, authority, registration_date, expiry_date, status) VALUES
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '55555555-5555-5555-5555-555555555555',
+ 'RNPDP-2024-001234', 'Ministerio de Justicia y Derechos Humanos - Perú', 
+ '2024-01-15 00:00:00+00', '2025-01-14 23:59:59+00', 'active');
+
+-- 🔴 CCPA_OPT_OUTS
+INSERT INTO ccpa_opt_outs (id, tenant_id, profile_id, channel, opted_out_at, reason) VALUES
+('cccccccc-cccc-cccc-cccc-cccccccccccc', '55555555-5555-5555-5555-555555555555',
+ '77777777-7777-7777-7777-777777777777', 'third_party_sharing', '2025-01-10 15:00:00+00',
+ 'No deseo que mis datos sean compartidos con terceros');
+
+-- 🔴 DATA_PROCESSING_AGREEMENTS
+INSERT INTO data_processing_agreements (id, tenant_id, agreement_name, processor_name, effective_date, expiry_date, status, terms) VALUES
+('dddddddd-dddd-dddd-dddd-dddddddddddd', '55555555-5555-5555-5555-555555555555',
+ 'DPA-2024-MIRAFLORES', 'Amazon Web Services Perú', 
+ '2024-01-01 00:00:00+00', '2026-12-31 23:59:59+00', 'active',
+ '{"data_processing": "hosting_services", "security_measures": "encryption_at_rest", "subprocessors": ["AWS Global"]}');
+
+-- 🔴 IMPACT_ASSESSMENTS
+INSERT INTO impact_assessments (id, tenant_id, assessment_name, conducted_date, risk_level, findings, status) VALUES
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '55555555-5555-5555-5555-555555555555',
+ 'Evaluación de Impacto - Sistema de Perfiles 2024', '2024-03-15 00:00:00+00', 'medium',
+ '{"risks_identified": ["acceso_no_autorizado", "retencion_excesiva"], "mitigation_measures": ["2fa_obligatorio", "retention_policy_1year"]}',
+ 'completed');
+
+-- 🔴 COMPLIANCE_TASKS
+INSERT INTO compliance_tasks (id, tenant_id, task_name, task_type, due_date, status, assigned_to) VALUES
+('ffffffff-ffff-ffff-ffff-ffffffffffff', '55555555-5555-5555-5555-555555555555',
+ 'Revisión trimestral de consentimientos', 'periodic_review', '2025-04-01 00:00:00+00', 'pending', '88888888-8888-8888-8888-888888888888'),
+('11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555',
+ 'Auditoría de seguridad de datos', 'security_audit', '2025-06-30 00:00:00+00', 'pending', '88888888-8888-8888-8888-888888888888');
+
+-- 🟣 AUDIT_LOG
+INSERT INTO audit_log (id, tenant_id, user_id, session_id, action, table_name, old_data, new_data, ip, created_at) VALUES
+('22222222-2222-2222-2222-222222222222', '55555555-5555-5555-5555-555555555555',
+ '11111111-1111-1111-1111-111111111111', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+ 'UPDATE', 'profiles', '{"full_name": "María Gonzalez"}', '{"full_name": "María González López"}',
+ '192.168.1.100', '2025-01-15 11:00:00+00');
+
+-- 🟣 POLICY_CACHE
+INSERT INTO policy_cache (id, tenant_id, policy_type, policy_data, cached_at, expires_at) VALUES
+('33333333-3333-3333-3333-333333333333', '55555555-5555-5555-5555-555555555555',
+ 'privacy_policy', '{"version": "2.1", "effective_date": "2024-01-01", "content": "Política actualizada..."}',
+ '2025-01-01 00:00:00+00', '2025-07-01 00:00:00+00');
+
+-- 🟣 CONSENT_AUDIT_LOG
+INSERT INTO consent_audit_log (id, tenant_id, profile_id, action, consent_data, created_at) VALUES
+('44444444-4444-4444-4444-444444444444', '55555555-5555-5555-5555-555555555555',
+ '77777777-7777-7777-7777-777777777777', 'CONSENT_GIVEN',
+ '{"category": "health", "purpose": "emergency_medical_services", "legal_basis": "consent"}',
+ '2025-01-10 14:45:00+00');
+
+-- 🟣 OUTBOX TABLES
+INSERT INTO outbox_identity (id, tenant_id, event_type, payload, published, created_at) VALUES
+('55555555-5555-5555-5555-555555555555', '55555555-5555-5555-5555-555555555555',
+ 'USER_REGISTERED', '{"user_id": "11111111-1111-1111-1111-111111111111", "email": "maria.gonzalez@email.com"}', true, '2025-01-10 14:25:00+00');
+
+INSERT INTO outbox_profiles (id, tenant_id, event_type, payload, published, created_at) VALUES
+('66666666-6666-6666-6666-666666666666', '55555555-5555-5555-5555-555555555555',
+ 'PROFILE_UPDATED', '{"profile_id": "77777777-7777-7777-7777-777777777777", "changes": ["full_name"]}', false, '2025-01-15 11:00:00+00');
+
+INSERT INTO outbox_compliance (id, tenant_id, event_type, payload, published, created_at) VALUES
+('77777777-7777-7777-7777-777777777777', '55555555-5555-5555-5555-555555555555',
+ 'DSAR_CREATED', '{"request_id": "99999999-9999-9999-9999-999999999999", "request_type": "access"}', true, '2025-01-15 10:30:00+00');
+
+INSERT INTO outbox_tenancy (id, tenant_id, event_type, payload, published, created_at) VALUES
+('88888888-8888-8888-8888-888888888888', '55555555-5555-5555-5555-555555555555',
+ 'MEMBERSHIP_CREATED', '{"membership_id": "44444444-4444-4444-4444-444444444444", "profile_id": "77777777-7777-7777-7777-777777777777"}', true, '2024-01-01 00:00:00+00');
+
+-- 🟣 BACKUP_SNAPSHOTS
+INSERT INTO backup_snapshots (id, tenant_id, snapshot_type, storage_path, created_at, expires_at) VALUES
+('99999999-9999-9999-9999-999999999999', '55555555-5555-5555-5555-555555555555',
+ 'full_database', 's3://smartedify-backups/tenant_55555555/full_20250101.tar.gz',
+ '2025-01-01 02:00:00+00', '2026-01-01 02:00:00+00');
+
+-- 🟣 RLS_TEST_CASES
+INSERT INTO rls_test_cases (id, tenant_id, table_name, test_query, expected_result, created_at) VALUES
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '55555555-5555-5555-5555-555555555555',
+ 'profiles', 'SELECT COUNT(*) FROM profiles WHERE tenant_id = current_setting(''app.current_tenant'')::UUID', '2 rows',
+ '2024-12-01 00:00:00+00');
+
+-- 🟣 AUDIT_ALERTS
+INSERT INTO audit_alerts (id, tenant_id, alert_type, severity, alert_data, triggered_at, resolved) VALUES
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '55555555-5555-5555-5555-555555555555',
+ 'multiple_failed_logins', 'high', '{"user_id": "44444444-4444-4444-4444-444444444444", "attempts": 5, "ip": "192.168.1.200"}',
+ '2025-01-13 17:30:00+00', false);
+
+-- 🎯 FEATURE FLAGS (Complete Configuration)
+INSERT INTO feature_flags_user_profile (id, tenant_id, feature_name, enabled, configuration, created_at) VALUES
+('cccccccc-cccc-cccc-cccc-cccccccccccc', '55555555-5555-5555-5555-555555555555',
+ 'enable_profile_picture_upload', true, '{"max_size_mb": 5, "allowed_formats": ["jpg", "png"]}', '2024-12-01 00:00:00+00'),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', '55555555-5555-5555-5555-555555555555',
+ 'use_advanced_profile_validation', true, '{"strict_mode": true, "validation_rules": ["email_verification", "phone_verification"]}', '2024-12-01 00:00:00+00');
+
+INSERT INTO feature_flags_identity (id, tenant_id, feature_name, enabled, configuration, created_at) VALUES
+('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '55555555-5555-5555-5555-555555555555',
+ 'enable_passkey', true, '{"aal_level": 3, "timeout_seconds": 300}', '2024-12-01 00:00:00+00'),
+('ffffffff-ffff-ffff-ffff-ffffffffffff', '55555555-5555-5555-5555-555555555555',
+ 'enable_token_rotation', true, '{"rotation_interval_hours": 24}', '2024-12-01 00:00:00+00');
+
+INSERT INTO feature_flags_compliance (id, tenant_id, feature_name, enabled, configuration, created_at) VALUES
+('11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555',
+ 'auto_dsar_processing', false, '{"auto_approve_simple": false, "ai_assistance": true}', '2024-12-01 00:00:00+00'),
+('22222222-2222-2222-2222-222222222222', '55555555-5555-5555-5555-555555555555',
+ 'jurisdiction_PE_address_validation_v2', true, '{"validation_level": "strict", "require_ubigeo": true}', '2024-12-01 00:00:00+00');
+
+INSERT INTO feature_flags (id, tenant_id, feature_name, enabled, configuration, created_at) VALUES
+('33333333-3333-3333-3333-333333333333', '55555555-5555-5555-5555-555555555555',
+ 'enable_condo_timezone_override', true, '{"allowed_timezones": ["America/Lima", "America/Bogota"]}', '
 ```
 ---
 
