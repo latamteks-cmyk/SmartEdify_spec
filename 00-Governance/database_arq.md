@@ -44,73 +44,16 @@ Incorpora todas las observaciones técnicas críticas:
 ---
 config:
   layout: elk
+  theme: forest
 ---
 erDiagram
-    tenants ||--o{ feature_flags : "configura_tenancy"
-    tenants ||--o{ feature_flags_user_profile : "configura_user_profile"
-    tenants ||--o{ feature_flags_identity : "configura_identity"
-    tenants ||--o{ feature_flags_compliance : "configura_compliance"
+
+    %% =============================================
+    %% 🔵 IDENTITY SERVICE TABLES (Blue Group)
+    %% =============================================
     
-    tenants {
-        uuid id PK
-        text name
-        text legal_name
-        text tenant_type
-        text jurisdiction_root
-        status_t status
-        text data_residency
-        text dpo_contact
-        boolean international_transfers
-        timestamptz created_at
-        timestamptz updated_at
-    }
+    classDef identityService fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
 
-    feature_flags {
-        uuid id PK
-        uuid tenant_id FK
-        uuid condominium_id FK
-        text feature_name
-        boolean enabled
-        jsonb configuration
-        timestamptz created_at
-        timestamptz updated_at
-    }
-
-    feature_flags_user_profile {
-        uuid id PK
-        uuid tenant_id FK
-        text feature_name
-        boolean enabled
-        jsonb configuration
-        timestamptz created_at
-        timestamptz updated_at
-    }
-
-    feature_flags_identity {
-        uuid id PK
-        uuid tenant_id FK
-        text feature_name
-        boolean enabled
-        jsonb configuration
-        timestamptz created_at
-        timestamptz updated_at
-    }
-
-    feature_flags_compliance {
-        uuid id PK
-        uuid tenant_id FK
-        text feature_name
-        boolean enabled
-        jsonb configuration
-        timestamptz created_at
-        timestamptz updated_at
-    }
-
-    users ||--o{ user_tenant_assignments : "asignado_a"
-    users ||--o{ sessions : "mantiene"
-    sessions ||--o{ refresh_tokens : "posee"
-    users ||--o{ profiles : "tiene_perfiles_en"
-    
     users {
         uuid id PK
         citext email
@@ -152,12 +95,22 @@ erDiagram
         timestamptz created_at
     }
 
-    profiles ||--o{ sensitive_data_categories : "tiene_datos_sensibles"
-    profiles ||--o{ memberships : "tiene_membresias_en"
-    profiles ||--o{ role_assignments : "asignado"
-    profiles ||--o{ delegations : "delega_a"
-    profiles ||--o{ communication_consents : "consiente"
-    
+    feature_flags_identity {
+        uuid id PK
+        uuid tenant_id FK
+        text feature_name
+        boolean enabled
+        jsonb configuration
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    %% =============================================
+    %% 🟢 USER PROFILE SERVICE TABLES (Green Group)
+    %% =============================================
+
+    classDef profileService fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+
     profiles {
         uuid id PK
         uuid user_id FK
@@ -186,53 +139,6 @@ erDiagram
         boolean active
     }
 
-    memberships {
-        uuid id PK
-        uuid tenant_id FK
-        uuid profile_id FK
-        uuid condominium_id FK
-        uuid unit_id FK
-        uuid relation_type_id FK
-        uuid sub_relation_type_id FK
-        jsonb privileges
-        uuid responsible_profile_id FK
-        timestamptz since
-        timestamptz until
-        status_t status
-    }
-
-    relation_types {
-        uuid id PK
-        text name
-        text description
-    }
-
-    sub_relation_types {
-        uuid id PK
-        uuid relation_type_id FK
-        text name
-        text description
-    }
-
-    role_assignments {
-        uuid id PK
-        uuid profile_id FK
-        uuid role_id FK
-        timestamptz assigned_at
-        timestamptz revoked_at
-        status_t status
-    }
-
-    delegations {
-        uuid id PK
-        uuid delegator_profile_id FK
-        uuid delegate_profile_id FK
-        uuid role_id FK
-        timestamptz start_date
-        timestamptz end_date
-        status_t status
-    }
-
     communication_consents {
         uuid id PK
         uuid profile_id FK
@@ -242,12 +148,36 @@ erDiagram
         timestamptz revoked_at
     }
 
-    tenants ||--o{ condominiums : "administra"
-    condominiums ||--o{ buildings : "contiene"
-    buildings ||--o{ units : "compone"
-    units ||--o{ subunits : "tiene_asociadas"
-    tenants ||--o{ roles : "define_roles"
-    
+    feature_flags_user_profile {
+        uuid id PK
+        uuid tenant_id FK
+        text feature_name
+        boolean enabled
+        jsonb configuration
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    %% =============================================
+    %% 🟠 TENANCY SERVICE TABLES (Orange Group)
+    %% =============================================
+
+    classDef tenancyService fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+
+    tenants {
+        uuid id PK
+        text name
+        text legal_name
+        text tenant_type
+        text jurisdiction_root
+        status_t status
+        text data_residency
+        text dpo_contact
+        boolean international_transfers
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
     condominiums {
         uuid id PK
         uuid tenant_id FK
@@ -300,29 +230,69 @@ erDiagram
         timestamptz created_at
     }
 
-    tenants ||--o{ data_subject_requests : "tiene_solicitudes"
-    profiles ||--o{ data_subject_requests : "solicita"
-    tenants ||--o{ data_bank_registrations : "registra_banco"
-    tenants ||--o{ ccpa_opt_outs : "registra_opt_outs"
-    tenants ||--o{ data_processing_agreements : "firma_acuerdos"
-    tenants ||--o{ impact_assessments : "realiza_evaluaciones"
-    tenants ||--o{ compliance_tasks : "gestiona_tareas"
-    tenants ||--o{ audit_log : "genera_logs"
-    
-    audit_log {
+    relation_types {
+        uuid id PK
+        text name
+        text description
+    }
+
+    sub_relation_types {
+        uuid id PK
+        uuid relation_type_id FK
+        text name
+        text description
+    }
+
+    memberships {
         uuid id PK
         uuid tenant_id FK
-        uuid user_id FK
-        uuid session_id FK
-        text action
-        text table_name
-        jsonb old_data
-        jsonb new_data
-        inet ip
-        timestamptz created_at
-        bytea hash_prev
-        bytea signature
+        uuid profile_id FK
+        uuid condominium_id FK
+        uuid unit_id FK
+        uuid relation_type_id FK
+        uuid sub_relation_type_id FK
+        jsonb privileges
+        uuid responsible_profile_id FK
+        timestamptz since
+        timestamptz until
+        status_t status
     }
+
+    role_assignments {
+        uuid id PK
+        uuid profile_id FK
+        uuid role_id FK
+        timestamptz assigned_at
+        timestamptz revoked_at
+        status_t status
+    }
+
+    delegations {
+        uuid id PK
+        uuid delegator_profile_id FK
+        uuid delegate_profile_id FK
+        uuid role_id FK
+        timestamptz start_date
+        timestamptz end_date
+        status_t status
+    }
+
+    feature_flags {
+        uuid id PK
+        uuid tenant_id FK
+        uuid condominium_id FK
+        text feature_name
+        boolean enabled
+        jsonb configuration
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    %% =============================================
+    %% 🔴 COMPLIANCE SERVICE TABLES (Red Group)
+    %% =============================================
+
+    classDef complianceService fill:#ffebee,stroke:#d32f2f,stroke-width:2px
 
     data_subject_requests {
         uuid id PK
@@ -387,6 +357,230 @@ erDiagram
         status_t status
         uuid assigned_to FK
     }
+
+    feature_flags_compliance {
+        uuid id PK
+        uuid tenant_id FK
+        text feature_name
+        boolean enabled
+        jsonb configuration
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    %% =============================================
+    %% 🟣 AUDIT & SYSTEM TABLES (Purple Group)
+    %% =============================================
+
+    classDef auditService fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+
+    audit_log {
+        uuid id PK
+        uuid tenant_id FK
+        uuid user_id FK
+        uuid session_id FK
+        text action
+        text table_name
+        jsonb old_data
+        jsonb new_data
+        inet ip
+        timestamptz created_at
+        bytea hash_prev
+        bytea signature
+    }
+
+    policy_cache {
+        uuid id PK
+        uuid tenant_id FK
+        text policy_type
+        jsonb policy_data
+        timestamptz cached_at
+        timestamptz expires_at
+    }
+
+    consent_audit_log {
+        uuid id PK
+        uuid tenant_id FK
+        uuid profile_id FK
+        text action
+        jsonb consent_data
+        timestamptz created_at
+        bytea hash_prev
+    }
+
+    outbox_identity {
+        uuid id PK
+        uuid tenant_id FK
+        text event_type
+        jsonb payload
+        timestamptz created_at
+        boolean published
+    }
+
+    outbox_profiles {
+        uuid id PK
+        uuid tenant_id FK
+        text event_type
+        jsonb payload
+        timestamptz created_at
+        boolean published
+    }
+
+    outbox_compliance {
+        uuid id PK
+        uuid tenant_id FK
+        text event_type
+        jsonb payload
+        timestamptz created_at
+        boolean published
+    }
+
+    outbox_tenancy {
+        uuid id PK
+        uuid tenant_id FK
+        text event_type
+        jsonb payload
+        timestamptz created_at
+        boolean published
+    }
+
+    backup_snapshots {
+        uuid id PK
+        uuid tenant_id FK
+        text snapshot_type
+        text storage_path
+        timestamptz created_at
+        timestamptz expires_at
+    }
+
+    rls_test_cases {
+        uuid id PK
+        uuid tenant_id FK
+        text table_name
+        text test_query
+        text expected_result
+        timestamptz created_at
+    }
+
+    audit_alerts {
+        uuid id PK
+        uuid tenant_id FK
+        text alert_type
+        text severity
+        jsonb alert_data
+        timestamptz triggered_at
+        boolean resolved
+    }
+
+    %% =============================================
+    %% 📊 ENUM TABLES (Gray Group)
+    %% =============================================
+
+    classDef enumService fill:#f5f5f5,stroke:#616161,stroke-width:2px
+
+    status_t {
+        status_t text PK
+    }
+
+    country_code_t {
+        country_code_t text PK
+    }
+
+    sensitive_category_t {
+        sensitive_category_t text PK
+    }
+
+    legal_basis_t {
+        legal_basis_t text PK
+    }
+
+    request_type_t {
+        request_type_t text PK
+    }
+
+    %% =============================================
+    %% 🔗 RELATIONSHIPS
+    %% =============================================
+
+    %% 🔵 IDENTITY SERVICE RELATIONSHIPS
+    users ||--o{ user_tenant_assignments : "asignado_a"
+    users ||--o{ sessions : "mantiene"
+    sessions ||--o{ refresh_tokens : "posee"
+    users ||--o{ profiles : "tiene_perfiles_en"
+    tenants ||--o{ feature_flags_identity : "configura_identity"
+
+    %% 🟢 USER PROFILE SERVICE RELATIONSHIPS
+    profiles ||--o{ sensitive_data_categories : "tiene_datos_sensibles"
+    profiles ||--o{ communication_consents : "consiente"
+    tenants ||--o{ feature_flags_user_profile : "configura_user_profile"
+
+    %% 🟠 TENANCY SERVICE RELATIONSHIPS
+    tenants ||--o{ condominiums : "administra"
+    condominiums ||--o{ buildings : "contiene"
+    buildings ||--o{ units : "compone"
+    units ||--o{ subunits : "tiene_asociadas"
+    tenants ||--o{ roles : "define_roles"
+    relation_types ||--o{ sub_relation_types : "tiene_subtipos"
+    memberships }o--|| relation_types : "tipo_relacion"
+    memberships }o--|| sub_relation_types : "subtipo_relacion"
+    profiles ||--o{ memberships : "tiene_membresias_en"
+    profiles ||--o{ role_assignments : "asignado"
+    profiles ||--o{ delegations : "delega_a"
+    tenants ||--o{ feature_flags : "configura_tenancy"
+
+    %% 🔴 COMPLIANCE SERVICE RELATIONSHIPS
+    tenants ||--o{ data_subject_requests : "tiene_solicitudes"
+    profiles ||--o{ data_subject_requests : "solicita"
+    tenants ||--o{ data_bank_registrations : "registra_banco"
+    tenants ||--o{ ccpa_opt_outs : "registra_opt_outs"
+    tenants ||--o{ data_processing_agreements : "firma_acuerdos"
+    tenants ||--o{ impact_assessments : "realiza_evaluaciones"
+    tenants ||--o{ compliance_tasks : "gestiona_tareas"
+    tenants ||--o{ feature_flags_compliance : "configura_compliance"
+
+    %% 🟣 AUDIT & SYSTEM RELATIONSHIPS
+    tenants ||--o{ audit_log : "genera_logs"
+    tenants ||--o{ policy_cache : "cachea_politicas"
+    tenants ||--o{ consent_audit_log : "audita_consentimientos"
+    tenants ||--o{ outbox_identity : "publica_eventos_identity"
+    tenants ||--o{ outbox_profiles : "publica_eventos_profiles"
+    tenants ||--o{ outbox_compliance : "publica_eventos_compliance"
+    tenants ||--o{ outbox_tenancy : "publica_eventos_tenancy"
+    tenants ||--o{ backup_snapshots : "almacena_backups"
+    tenants ||--o{ rls_test_cases : "testea_rls"
+    tenants ||--o{ audit_alerts : "genera_alertas"
+
+    %% 📊 ENUM RELATIONSHIPS
+    status_t ||--o{ users : "define_estado"
+    status_t ||--o{ profiles : "define_estado"
+    status_t ||--o{ tenants : "define_estado"
+    status_t ||--o{ memberships : "define_estado"
+    status_t ||--o{ data_subject_requests : "define_estado"
+    status_t ||--o{ condominiums : "define_estado"
+    status_t ||--o{ buildings : "define_estado"
+    status_t ||--o{ units : "define_estado"
+    status_t ||--o{ subunits : "define_estado"
+    status_t ||--o{ role_assignments : "define_estado"
+    status_t ||--o{ delegations : "define_estado"
+    status_t ||--o{ data_bank_registrations : "define_estado"
+    status_t ||--o{ data_processing_agreements : "define_estado"
+    status_t ||--o{ impact_assessments : "define_estado"
+    status_t ||--o{ compliance_tasks : "define_estado"
+    country_code_t ||--o{ profiles : "define_pais"
+    sensitive_category_t ||--o{ sensitive_data_categories : "define_categoria"
+    legal_basis_t ||--o{ sensitive_data_categories : "define_base_legal"
+    request_type_t ||--o{ data_subject_requests : "define_tipo_solicitud"
+
+    %% =============================================
+    %% 🎨 APPLY STYLES TO GROUPS
+    %% =============================================
+
+    class users,user_tenant_assignments,sessions,refresh_tokens,feature_flags_identity identityService
+    class profiles,sensitive_data_categories,communication_consents,feature_flags_user_profile profileService
+    class tenants,condominiums,buildings,units,subunits,roles,relation_types,sub_relation_types,memberships,role_assignments,delegations,feature_flags tenancyService
+    class data_subject_requests,data_bank_registrations,ccpa_opt_outs,data_processing_agreements,impact_assessments,compliance_tasks,feature_flags_compliance complianceService
+    class audit_log,policy_cache,consent_audit_log,outbox_identity,outbox_profiles,outbox_compliance,outbox_tenancy,backup_snapshots,rls_test_cases,audit_alerts auditService
+    class status_t,country_code_t,sensitive_category_t,legal_basis_t,request_type_t enumService
 ```
 ```sql
 Database Schema for dbdiagram.io
