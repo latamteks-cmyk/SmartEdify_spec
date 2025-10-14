@@ -389,6 +389,599 @@ erDiagram
     }
 ```
 
+Database Schema for dbdiagram.io
+sql
+// =============================================
+// 🏛️ SMARTEDIFY DATABASE SCHEMA v2.2
+// =============================================
+
+// =============================================
+// 🎨 COLOR LEGEND:
+// 🔵 IDENTITY SERVICE (Blue)
+// 🟢 USER PROFILE SERVICE (Green) 
+// 🟠 TENANCY SERVICE (Orange)
+// 🔴 COMPLIANCE SERVICE (Red)
+// 🟣 AUDIT & SYSTEM TABLES (Purple)
+// =============================================
+
+// =============================================
+// 🔵 IDENTITY SERVICE TABLES
+// =============================================
+
+Table users {
+  id uuid [primary key]
+  email citext
+  phone text
+  global_status status_t
+  email_verified_at timestamptz
+  created_at timestamptz [default: `now()`]
+  
+  Note: '🔵 Source: User registration form (frontend)'
+}
+
+Table user_tenant_assignments {
+  id uuid [primary key]
+  user_id uuid [ref: > users.id]
+  tenant_id uuid [ref: > tenants.id]
+  status status_t
+  default_role text
+  assigned_at timestamptz [default: `now()`]
+  removed_at timestamptz
+  tenant_specific_settings jsonb
+  
+  Note: '🔵 Source: Admin panel assignment'
+}
+
+Table sessions {
+  id uuid [primary key]
+  user_id uuid [ref: > users.id]
+  tenant_id uuid [ref: > tenants.id]
+  device_id text
+  cnf_jkt text
+  not_after timestamptz
+  revoked_at timestamptz
+  version integer
+  storage_validation_passed boolean
+  created_at timestamptz [default: `now()`]
+  
+  Note: '🔵 Source: Login system (backend)'
+}
+
+Table refresh_tokens {
+  id uuid [primary key]
+  session_id uuid [ref: > sessions.id]
+  token_hash text
+  expires_at timestamptz
+  created_at timestamptz [default: `now()`]
+  
+  Note: '🔵 Source: Token generation (backend)'
+}
+
+Table feature_flags_identity {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  feature_name text
+  enabled boolean [default: false]
+  configuration jsonb [default: `{}`]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  
+  Note: '🔵 Source: Admin configuration panel'
+}
+
+// =============================================
+// 🟢 USER PROFILE SERVICE TABLES
+// =============================================
+
+Table profiles {
+  id uuid [primary key]
+  user_id uuid [ref: > users.id]
+  tenant_id uuid [ref: > tenants.id]
+  email citext
+  phone text
+  full_name text
+  status status_t
+  country_code country_code_t
+  personal_data jsonb
+  habeas_data_acceptance boolean
+  habeas_data_accepted_at timestamptz
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  deleted_at timestamptz
+  
+  Note: '🟢 Source: User profile form (frontend)'
+}
+
+Table sensitive_data_categories {
+  id uuid [primary key]
+  profile_id uuid [ref: > profiles.id]
+  category sensitive_category_t
+  legal_basis legal_basis_t
+  purpose text
+  consent_given_at timestamptz
+  expires_at timestamptz
+  active boolean [default: true]
+  
+  Note: '🟢 Source: Consent forms & compliance checks'
+}
+
+Table communication_consents {
+  id uuid [primary key]
+  profile_id uuid [ref: > profiles.id]
+  channel text
+  consented boolean
+  consented_at timestamptz
+  revoked_at timestamptz
+  
+  Note: '🟢 Source: Marketing preferences form'
+}
+
+Table feature_flags_user_profile {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  feature_name text
+  enabled boolean [default: false]
+  configuration jsonb [default: `{}`]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  
+  Note: '🟢 Source: Feature management dashboard'
+}
+
+// =============================================
+// 🟠 TENANCY SERVICE TABLES
+// =============================================
+
+Table tenants {
+  id uuid [primary key]
+  name text
+  legal_name text
+  tenant_type text
+  jurisdiction_root text
+  status status_t
+  data_residency text
+  dpo_contact text
+  international_transfers boolean
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  
+  Note: '🟠 Source: Tenant onboarding process'
+}
+
+Table condominiums {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  name text
+  address jsonb
+  jurisdiction text
+  timezone text
+  currency text
+  status status_t
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  
+  Note: '🟠 Source: Property management system'
+}
+
+Table buildings {
+  id uuid [primary key]
+  condominium_id uuid [ref: > condominiums.id]
+  name text
+  address_line text
+  floors integer
+  amenities jsonb
+  status status_t
+  created_at timestamptz [default: `now()`]
+  
+  Note: '🟠 Source: Architectural plans & surveys'
+}
+
+Table units {
+  id uuid [primary key]
+  building_id uuid [ref: > buildings.id]
+  unit_number text
+  unit_type text
+  area decimal
+  bedrooms integer
+  status status_t
+  created_at timestamptz [default: `now()`]
+  
+  Note: '🟠 Source: Property registry & blueprints'
+}
+
+Table subunits {
+  id uuid [primary key]
+  unit_id uuid [ref: > units.id]
+  subunit_number text
+  subunit_type text
+  area decimal
+  status status_t
+  
+  Note: '🟠 Source: Property subdivision records'
+}
+
+Table roles {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  name text
+  permissions jsonb
+  created_at timestamptz [default: `now()`]
+  
+  Note: '🟠 Source: RBAC configuration by admins'
+}
+
+Table relation_types {
+  id uuid [primary key]
+  name text
+  description text
+  
+  Note: '🟠 Source: Business domain definitions'
+}
+
+Table sub_relation_types {
+  id uuid [primary key]
+  relation_type_id uuid [ref: > relation_types.id]
+  name text
+  description text
+  
+  Note: '🟠 Source: Business domain specialization'
+}
+
+Table memberships {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  profile_id uuid [ref: > profiles.id]
+  condominium_id uuid [ref: > condominiums.id]
+  unit_id uuid [ref: > units.id]
+  relation_type_id uuid [ref: > relation_types.id]
+  sub_relation_type_id uuid [ref: > sub_relation_types.id]
+  privileges jsonb
+  responsible_profile_id uuid [ref: > profiles.id]
+  since timestamptz
+  until timestamptz
+  status status_t
+  
+  Note: '🟠 Source: Resident registration & contracts'
+}
+
+Table role_assignments {
+  id uuid [primary key]
+  profile_id uuid [ref: > profiles.id]
+  role_id uuid [ref: > roles.id]
+  assigned_at timestamptz [default: `now()`]
+  revoked_at timestamptz
+  status status_t
+  
+  Note: '🟠 Source: Admin user management'
+}
+
+Table delegations {
+  id uuid [primary key]
+  delegator_profile_id uuid [ref: > profiles.id]
+  delegate_profile_id uuid [ref: > profiles.id]
+  role_id uuid [ref: > roles.id]
+  start_date timestamptz
+  end_date timestamptz
+  status status_t
+  
+  Note: '🟠 Source: Temporary role delegation system'
+}
+
+Table feature_flags {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  condominium_id uuid [ref: > condominiums.id]
+  feature_name text
+  enabled boolean [default: false]
+  configuration jsonb [default: `{}`]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  
+  Note: '🟠 Source: Tenant feature configuration'
+}
+
+// =============================================
+// 🔴 COMPLIANCE SERVICE TABLES
+// =============================================
+
+Table data_subject_requests {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  profile_id uuid [ref: > profiles.id]
+  request_type request_type_t
+  status status_t
+  request_data jsonb
+  response_data jsonb
+  received_at timestamptz [default: `now()`]
+  resolved_at timestamptz
+  identity_verified boolean [default: false]
+  
+  Note: '🔴 Source: User privacy requests portal'
+}
+
+Table data_bank_registrations {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  registration_number text
+  authority text
+  registration_date timestamptz
+  expiry_date timestamptz
+  status status_t
+  
+  Note: '🔴 Source: Government regulatory bodies'
+}
+
+Table ccpa_opt_outs {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  profile_id uuid [ref: > profiles.id]
+  channel text
+  opted_out_at timestamptz [default: `now()`]
+  reason text
+  
+  Note: '🔴 Source: User privacy preferences'
+}
+
+Table data_processing_agreements {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  agreement_name text
+  processor_name text
+  effective_date timestamptz
+  expiry_date timestamptz
+  status status_t
+  terms jsonb
+  
+  Note: '🔴 Source: Legal department contracts'
+}
+
+Table impact_assessments {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  assessment_name text
+  conducted_date timestamptz
+  risk_level text
+  findings jsonb
+  status status_t
+  
+  Note: '🔴 Source: Security & compliance audits'
+}
+
+Table compliance_tasks {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  task_name text
+  task_type text
+  due_date timestamptz
+  completed_date timestamptz
+  status status_t
+  assigned_to uuid [ref: > profiles.id]
+  
+  Note: '🔴 Source: Compliance workflow system'
+}
+
+Table feature_flags_compliance {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  feature_name text
+  enabled boolean [default: false]
+  configuration jsonb [default: `{}`]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  
+  Note: '🔴 Source: Compliance feature controls'
+}
+
+// =============================================
+// 🟣 AUDIT & SYSTEM TABLES
+// =============================================
+
+Table audit_log {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  user_id uuid [ref: > users.id]
+  session_id uuid [ref: > sessions.id]
+  action text
+  table_name text
+  old_data jsonb
+  new_data jsonb
+  ip inet
+  created_at timestamptz [default: `now()`]
+  hash_prev bytea
+  signature bytea
+  
+  Note: '🟣 Source: System-wide change tracking'
+}
+
+Table policy_cache {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  policy_type text
+  policy_data jsonb
+  cached_at timestamptz [default: `now()`]
+  expires_at timestamptz
+  
+  Note: '🟣 Source: Policy engine computations'
+}
+
+Table consent_audit_log {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  profile_id uuid [ref: > profiles.id]
+  action text
+  consent_data jsonb
+  created_at timestamptz [default: `now()`]
+  hash_prev bytea
+  
+  Note: '🟣 Source: Consent management system'
+}
+
+Table outbox_identity {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  event_type text
+  payload jsonb
+  created_at timestamptz [default: `now()`]
+  published boolean [default: false]
+  
+  Note: '🟣 Source: Identity service events'
+}
+
+Table outbox_profiles {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  event_type text
+  payload jsonb
+  created_at timestamptz [default: `now()`]
+  published boolean [default: false]
+  
+  Note: '🟣 Source: Profile service events'
+}
+
+Table backup_snapshots {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  snapshot_type text
+  storage_path text
+  created_at timestamptz [default: `now()`]
+  expires_at timestamptz
+  
+  Note: '🟣 Source: Backup automation system'
+}
+
+Table rls_test_cases {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  table_name text
+  test_query text
+  expected_result text
+  created_at timestamptz [default: `now()`]
+  
+  Note: '🟣 Source: Security testing framework'
+}
+
+Table audit_alerts {
+  id uuid [primary key]
+  tenant_id uuid [ref: > tenants.id]
+  alert_type text
+  severity text
+  alert_data jsonb
+  triggered_at timestamptz [default: `now()`]
+  resolved boolean [default: false]
+  
+  Note: '🟣 Source: Monitoring & alerting system'
+}
+
+// =============================================
+// 📊 ENUM TABLES
+// =============================================
+
+Table status_t {
+  status_t text [primary key]
+  Note: '📊 Domain: active, inactive, suspended, pending'
+}
+
+Table country_code_t {
+  country_code_t text [primary key]
+  Note: '📊 Domain: US, PE, CO, BR, MX, etc.'
+}
+
+Table sensitive_category_t {
+  sensitive_category_t text [primary key]
+  Note: '📊 Domain: health, biometric, financial, location'
+}
+
+Table legal_basis_t {
+  legal_basis_t text [primary key]
+  Note: '📊 Domain: consent, contract, legal_obligation, vital_interest'
+}
+
+Table request_type_t {
+  request_type_t text [primary key]
+  Note: '📊 Domain: access, rectification, erasure, restriction'
+}
+
+// =============================================
+// 🎯 MOCKUP DATA EXAMPLES
+// =============================================
+
+// 🔵 IDENTITY SERVICE MOCKUP
+// Note: 'Mockup: Real user data with encrypted PII'
+// users: 
+//   - id: '11111111-1111-1111-1111-111111111111', email: 'maria.gonzalez@email.com', phone: '+51987654321'
+//   - id: '22222222-2222-2222-2222-222222222222', email: 'carlos.rodriguez@email.com', phone: '+51987654322'
+
+// 🟢 USER PROFILE MOCKUP  
+// Note: 'Mockup: Profile with Peruvian citizen data'
+// profiles:
+//   - full_name: 'María González López', country_code: 'PE'
+//   - personal_data: '{"document_number": "encrypted_12345678", "birth_date": "1985-03-15"}'
+
+// 🟠 TENANCY MOCKUP
+// Note: 'Mockup: Real condominium in Lima, Peru'
+// condominiums:
+//   - name: 'Residencial San Isidro', jurisdiction: 'PE-LMA', timezone: 'America/Lima', currency: 'PEN'
+
+// 🔴 COMPLIANCE MOCKUP
+// Note: 'Mockup: GDPR data access request'
+// data_subject_requests:
+//   - request_type: 'access', status: 'pending', received_at: '2025-01-15 10:30:00+00'
+
+// 🟣 AUDIT MOCKUP
+// Note: 'Mockup: User profile update audit trail'
+// audit_log:
+//   - action: 'UPDATE', table_name: 'profiles', ip: '192.168.1.100'
+📋 Mockup Data with Real Examples
+sql
+-- =============================================
+-- 🎯 REAL-WORLD MOCKUP DATA
+-- =============================================
+
+-- 🔵 IDENTITY SERVICE - Real User Examples
+INSERT INTO users (id, email, phone, global_status, email_verified_at) VALUES
+('11111111-1111-1111-1111-111111111111', 'maria.gonzalez@email.com', '+51987654321', 'active', '2025-01-10 14:30:00+00'),
+('22222222-2222-2222-2222-222222222222', 'carlos.rodriguez@email.com', '+51987654322', 'active', '2025-01-11 09:15:00+00'),
+('33333333-3333-3333-3333-333333333333', 'ana.martinez@email.com', '+51987654323', 'pending', NULL);
+
+-- 🟢 USER PROFILE - Peruvian Citizen Data
+INSERT INTO profiles (id, user_id, tenant_id, full_name, country_code, personal_data, habeas_data_acceptance) VALUES
+('44444444-4444-4444-4444-444444444444', '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 
+ 'María González López', 'PE', 
+ '{"document_type": "DNI", "document_number": "encrypted_12345678", "birth_date": "1985-03-15", "gender": "F"}', 
+ true),
+('66666666-6666-6666-6666-666666666666', '22222222-2222-2222-2222-222222222222', '55555555-5555-5555-5555-555555555555',
+ 'Carlos Rodríguez Vargas', 'PE',
+ '{"document_type": "DNI", "document_number": "encrypted_87654321", "birth_date": "1990-07-22", "gender": "M"}',
+ true);
+
+-- 🟠 TENANCY - Real Condominium in Lima
+INSERT INTO tenants (id, name, legal_name, jurisdiction_root, data_residency) VALUES
+('55555555-5555-5555-5555-555555555555', 'Edificio Miraflores', 'Miraflores Tower S.A.C.', 'PE', 'PE-LMA');
+
+INSERT INTO condominiums (id, tenant_id, name, jurisdiction, timezone, currency) VALUES
+('77777777-7777-7777-7777-777777777777', '55555555-5555-5555-5555-555555555555', 
+ 'Residencial San Isidro', 'PE-LMA', 'America/Lima', 'PEN');
+
+-- 🔴 COMPLIANCE - Real Data Subject Request
+INSERT INTO data_subject_requests (id, tenant_id, profile_id, request_type, status, received_at) VALUES
+('88888888-8888-8888-8888-888888888888', '55555555-5555-5555-5555-555555555555', 
+ '44444444-4444-4444-4444-444444444444', 'access', 'pending', '2025-01-15 10:30:00+00');
+
+-- 🟣 AUDIT - Real Audit Trail
+INSERT INTO audit_log (id, tenant_id, user_id, action, table_name, ip) VALUES
+('99999999-9999-9999-9999-999999999999', '55555555-5555-5555-5555-555555555555',
+ '11111111-1111-1111-1111-111111111111', 'UPDATE', 'profiles', '192.168.1.100');
+
+-- 🎯 FEATURE FLAGS - Real Configuration Examples
+INSERT INTO feature_flags_user_profile (id, tenant_id, feature_name, enabled, configuration) VALUES
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '55555555-5555-5555-5555-555555555555',
+ 'enable_profile_picture_upload', true, '{"max_size_mb": 5, "allowed_formats": ["jpg", "png"]}');
+
+INSERT INTO feature_flags_identity (id, tenant_id, feature_name, enabled) VALUES
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '55555555-5555-5555-5555-555555555555',
+ 'enable_passkey', true);
+Este código está listo para importar en dbdiagram.io y muestra:
+
 ---
 
 ## 🔒 3. Seguridad y Cumplimiento
