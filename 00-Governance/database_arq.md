@@ -115,8 +115,6 @@ erDiagram
         uuid id PK
         uuid user_id FK
         uuid tenant_id FK
-        citext email
-        text phone
         text full_name
         status_t status
         country_code_t country_code
@@ -506,7 +504,7 @@ erDiagram
     users ||--o{ user_tenant_assignments : "asignado_a"
     users ||--o{ sessions : "mantiene"
     sessions ||--o{ refresh_tokens : "posee"
-    users ||--o{ profiles : "tiene_perfiles_en"
+    users ||{ profiles : "tiene_perfiles_en"
     tenants ||--o{ feature_flags_identity : "configura_identity"
 
     %% 🟢 USER PROFILE SERVICE RELATIONSHIPS
