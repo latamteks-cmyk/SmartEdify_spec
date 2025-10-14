@@ -46,306 +46,347 @@ config:
   layout: elk
 ---
 erDiagram
-    status_t {
-        string status_t
+    tenants ||--o{ feature_flags : "configura_tenancy"
+    tenants ||--o{ feature_flags_user_profile : "configura_user_profile"
+    tenants ||--o{ feature_flags_identity : "configura_identity"
+    tenants ||--o{ feature_flags_compliance : "configura_compliance"
+    
+    tenants {
+        uuid id PK
+        text name
+        text legal_name
+        text tenant_type
+        text jurisdiction_root
+        status_t status
+        text data_residency
+        text dpo_contact
+        boolean international_transfers
+        timestamptz created_at
+        timestamptz updated_at
     }
-    country_code_t {
-        string country_code_t
+
+    feature_flags {
+        uuid id PK
+        uuid tenant_id FK
+        uuid condominium_id FK
+        text feature_name
+        boolean enabled
+        jsonb configuration
+        timestamptz created_at
+        timestamptz updated_at
     }
-    sensitive_category_t {
-        string sensitive_category_t
+
+    feature_flags_user_profile {
+        uuid id PK
+        uuid tenant_id FK
+        text feature_name
+        boolean enabled
+        jsonb configuration
+        timestamptz created_at
+        timestamptz updated_at
     }
-    legal_basis_t {
-        string legal_basis_t
+
+    feature_flags_identity {
+        uuid id PK
+        uuid tenant_id FK
+        text feature_name
+        boolean enabled
+        jsonb configuration
+        timestamptz created_at
+        timestamptz updated_at
     }
-    request_type_t {
-        string request_type_t
+
+    feature_flags_compliance {
+        uuid id PK
+        uuid tenant_id FK
+        text feature_name
+        boolean enabled
+        jsonb configuration
+        timestamptz created_at
+        timestamptz updated_at
     }
-        users ||--o{ user_tenant_assignments : "asignado_a"
-        users ||--o{ sessions : "mantiene"
-        sessions ||--o{ refresh_tokens : "posee"
-        users ||--o{ profiles : "tiene_perfiles_en"
-        tenants ||--o{ feature_flags : "configura"
-        users {
-            uuid id PK
-            citext email
-            text phone
-            status_t global_status
-            timestamptz email_verified_at
-            timestamptz created_at
-        }
-        tenants {
-            uuid id PK
-            text name
-            text legal_name
-            text tenant_type
-            text jurisdiction_root
-            status_t status
-            text data_residency
-            text dpo_contact
-            boolean international_transfers
-            timestamptz created_at
-            timestamptz updated_at
-        }
-        user_tenant_assignments {
-            uuid id PK
-            uuid user_id FK
-            uuid tenant_id FK
-            status_t status
-            text default_role
-            timestamptz assigned_at
-            timestamptz removed_at
-            jsonb tenant_specific_settings
-        }
-        sessions {
-            uuid id PK
-            uuid user_id FK
-            uuid tenant_id FK
-            text device_id
-            text cnf_jkt
-            timestamptz not_after
-            timestamptz revoked_at
-            integer version
-            boolean storage_validation_passed
-            timestamptz created_at
-        }
-        refresh_tokens {
-            uuid id PK
-            uuid session_id FK
-            text token_hash
-            timestamptz expires_at
-            timestamptz created_at
-        }
-        feature_flags {
-            uuid id PK
-            uuid tenant_id FK
-            text feature_name
-            boolean enabled
-            jsonb configuration
-            timestamptz created_at
-        }
-        profiles ||--o{ sensitive_data_categories : "tiene_datos_sensibles"
-        profiles ||--o{ memberships : "tiene_membresias_en"
-        profiles ||--o{ role_assignments : "asignado"
-        profiles ||--o{ delegations : "delega_a"
-        profiles ||--o{ communication_consents : "consiente"
-        relation_types ||--o{ sub_relation_types : "tiene_subtipos"
-        memberships }o--|| relation_types : "tipo_relacion"
-        memberships }o--|| sub_relation_types : "subtipo_relacion"
-        profiles {
-            uuid id PK
-            uuid user_id FK
-            uuid tenant_id FK
-            citext email
-            text phone
-            text full_name
-            status_t status
-            country_code_t country_code
-            jsonb personal_data
-            boolean habeas_data_acceptance
-            timestamptz habeas_data_accepted_at
-            timestamptz created_at
-            timestamptz updated_at
-            timestamptz deleted_at
-        }
-        sensitive_data_categories {
-            uuid id PK
-            uuid profile_id FK
-            sensitive_category_t category
-            legal_basis_t legal_basis
-            text purpose
-            timestamptz consent_given_at
-            timestamptz expires_at
-            boolean active
-        }
-        memberships {
-            uuid id PK
-            uuid tenant_id FK
-            uuid profile_id FK
-            uuid condominium_id FK
-            uuid unit_id FK
-            uuid relation_type_id FK
-            uuid sub_relation_type_id FK
-            jsonb privileges
-            uuid responsible_profile_id FK
-            timestamptz since
-            timestamptz until
-            status_t status
-        }
-        relation_types {
-            uuid id PK
-            text name
-            text description
-        }
-        sub_relation_types {
-            uuid id PK
-            uuid relation_type_id FK
-            text name
-            text description
-        }
-        role_assignments {
-            uuid id PK
-            uuid profile_id FK
-            uuid role_id FK
-            timestamptz assigned_at
-            timestamptz revoked_at
-            status_t status
-        }
-        delegations {
-            uuid id PK
-            uuid delegator_profile_id FK
-            uuid delegate_profile_id FK
-            uuid role_id FK
-            timestamptz start_date
-            timestamptz end_date
-            status_t status
-        }
-        communication_consents {
-            uuid id PK
-            uuid profile_id FK
-            text channel
-            boolean consented
-            timestamptz consented_at
-            timestamptz revoked_at
-        }
-        tenants ||--o{ condominiums : "administra"
-        condominiums ||--o{ buildings : "contiene"
-        buildings ||--o{ units : "compone"
-        units ||--o{ subunits : "tiene_asociadas"
-        tenants ||--o{ roles : "define_roles"
-        condominiums {
-            uuid id PK
-            uuid tenant_id FK
-            text name
-            jsonb address
-            text jurisdiction
-            text timezone
-            text currency
-            status_t status
-            timestamptz created_at
-            timestamptz updated_at
-        }
-        buildings {
-            uuid id PK
-            uuid condominium_id FK
-            text name
-            text address_line
-            integer floors
-            jsonb amenities
-            status_t status
-            timestamptz created_at
-        }
-        units {
-            uuid id PK
-            uuid building_id FK
-            text unit_number
-            text unit_type
-            decimal area
-            integer bedrooms
-            status_t status
-            timestamptz created_at
-        }
-        subunits {
-            uuid id PK
-            uuid unit_id FK
-            text subunit_number
-            text subunit_type
-            decimal area
-            status_t status
-        }
-        roles {
-            uuid id PK
-            uuid tenant_id FK
-            text name
-            jsonb permissions
-            timestamptz created_at
-        }
-        tenants ||--o{ data_subject_requests : "tiene_solicitudes"
-        profiles ||--o{ data_subject_requests : "solicita"
-        tenants ||--o{ data_bank_registrations : "registra_banco"
-        tenants ||--o{ ccpa_opt_outs : "registra_opt_outs"
-        tenants ||--o{ data_processing_agreements : "firma_acuerdos"
-        tenants ||--o{ impact_assessments : "realiza_evaluaciones"
-        tenants ||--o{ compliance_tasks : "gestiona_tareas"
-        tenants ||--o{ audit_log : "genera_logs"
-        audit_log {
-            uuid id PK
-            uuid tenant_id FK
-            uuid user_id FK
-            uuid session_id FK
-            text action
-            text table_name
-            jsonb old_data
-            jsonb new_data
-            inet ip
-            timestamptz created_at
-            bytea hash_prev
-            bytea signature
-        }
-        data_subject_requests {
-            uuid id PK
-            uuid tenant_id FK
-            uuid profile_id FK
-            request_type_t request_type
-            status_t status
-            jsonb request_data
-            jsonb response_data
-            timestamptz received_at
-            timestamptz resolved_at
-            boolean identity_verified
-        }
-        data_bank_registrations {
-            uuid id PK
-            uuid tenant_id FK
-            text registration_number
-            text authority
-            timestamptz registration_date
-            timestamptz expiry_date
-            status_t status
-        }
-        ccpa_opt_outs {
-            uuid id PK
-            uuid tenant_id FK
-            uuid profile_id FK
-            text channel
-            timestamptz opted_out_at
-            text reason
-        }
-        data_processing_agreements {
-            uuid id PK
-            uuid tenant_id FK
-            text agreement_name
-            text processor_name
-            timestamptz effective_date
-            timestamptz expiry_date
-            status_t status
-            jsonb terms
-        }
-        impact_assessments {
-            uuid id PK
-            uuid tenant_id FK
-            text assessment_name
-            timestamptz conducted_date
-            text risk_level
-            jsonb findings
-            status_t status
-        }
-        compliance_tasks {
-            uuid id PK
-            uuid tenant_id FK
-            text task_name
-            text task_type
-            timestamptz due_date
-            timestamptz completed_date
-            status_t status
-            uuid assigned_to FK
-        }
-    users ||--o{ profiles : "tiene_perfiles"
+
+    users ||--o{ user_tenant_assignments : "asignado_a"
+    users ||--o{ sessions : "mantiene"
+    sessions ||--o{ refresh_tokens : "posee"
+    users ||--o{ profiles : "tiene_perfiles_en"
+    
+    users {
+        uuid id PK
+        citext email
+        text phone
+        status_t global_status
+        timestamptz email_verified_at
+        timestamptz created_at
+    }
+
+    user_tenant_assignments {
+        uuid id PK
+        uuid user_id FK
+        uuid tenant_id FK
+        status_t status
+        text default_role
+        timestamptz assigned_at
+        timestamptz removed_at
+        jsonb tenant_specific_settings
+    }
+
+    sessions {
+        uuid id PK
+        uuid user_id FK
+        uuid tenant_id FK
+        text device_id
+        text cnf_jkt
+        timestamptz not_after
+        timestamptz revoked_at
+        integer version
+        boolean storage_validation_passed
+        timestamptz created_at
+    }
+
+    refresh_tokens {
+        uuid id PK
+        uuid session_id FK
+        text token_hash
+        timestamptz expires_at
+        timestamptz created_at
+    }
+
+    profiles ||--o{ sensitive_data_categories : "tiene_datos_sensibles"
+    profiles ||--o{ memberships : "tiene_membresias_en"
+    profiles ||--o{ role_assignments : "asignado"
+    profiles ||--o{ delegations : "delega_a"
+    profiles ||--o{ communication_consents : "consiente"
+    
+    profiles {
+        uuid id PK
+        uuid user_id FK
+        uuid tenant_id FK
+        citext email
+        text phone
+        text full_name
+        status_t status
+        country_code_t country_code
+        jsonb personal_data
+        boolean habeas_data_acceptance
+        timestamptz habeas_data_accepted_at
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+
+    sensitive_data_categories {
+        uuid id PK
+        uuid profile_id FK
+        sensitive_category_t category
+        legal_basis_t legal_basis
+        text purpose
+        timestamptz consent_given_at
+        timestamptz expires_at
+        boolean active
+    }
+
+    memberships {
+        uuid id PK
+        uuid tenant_id FK
+        uuid profile_id FK
+        uuid condominium_id FK
+        uuid unit_id FK
+        uuid relation_type_id FK
+        uuid sub_relation_type_id FK
+        jsonb privileges
+        uuid responsible_profile_id FK
+        timestamptz since
+        timestamptz until
+        status_t status
+    }
+
+    relation_types {
+        uuid id PK
+        text name
+        text description
+    }
+
+    sub_relation_types {
+        uuid id PK
+        uuid relation_type_id FK
+        text name
+        text description
+    }
+
+    role_assignments {
+        uuid id PK
+        uuid profile_id FK
+        uuid role_id FK
+        timestamptz assigned_at
+        timestamptz revoked_at
+        status_t status
+    }
+
+    delegations {
+        uuid id PK
+        uuid delegator_profile_id FK
+        uuid delegate_profile_id FK
+        uuid role_id FK
+        timestamptz start_date
+        timestamptz end_date
+        status_t status
+    }
+
+    communication_consents {
+        uuid id PK
+        uuid profile_id FK
+        text channel
+        boolean consented
+        timestamptz consented_at
+        timestamptz revoked_at
+    }
+
     tenants ||--o{ condominiums : "administra"
-    profiles ||--o{ memberships : "en_condominios"
-    roles ||--o{ role_assignments : "asignado_a_perfiles"
-    tenants ||--o{ audit_log : "auditados"
-    profiles ||--o{ data_subject_requests : "solicitan_datos"
+    condominiums ||--o{ buildings : "contiene"
+    buildings ||--o{ units : "compone"
+    units ||--o{ subunits : "tiene_asociadas"
+    tenants ||--o{ roles : "define_roles"
+    
+    condominiums {
+        uuid id PK
+        uuid tenant_id FK
+        text name
+        jsonb address
+        text jurisdiction
+        text timezone
+        text currency
+        status_t status
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    buildings {
+        uuid id PK
+        uuid condominium_id FK
+        text name
+        text address_line
+        integer floors
+        jsonb amenities
+        status_t status
+        timestamptz created_at
+    }
+
+    units {
+        uuid id PK
+        uuid building_id FK
+        text unit_number
+        text unit_type
+        decimal area
+        integer bedrooms
+        status_t status
+        timestamptz created_at
+    }
+
+    subunits {
+        uuid id PK
+        uuid unit_id FK
+        text subunit_number
+        text subunit_type
+        decimal area
+        status_t status
+    }
+
+    roles {
+        uuid id PK
+        uuid tenant_id FK
+        text name
+        jsonb permissions
+        timestamptz created_at
+    }
+
+    tenants ||--o{ data_subject_requests : "tiene_solicitudes"
+    profiles ||--o{ data_subject_requests : "solicita"
+    tenants ||--o{ data_bank_registrations : "registra_banco"
+    tenants ||--o{ ccpa_opt_outs : "registra_opt_outs"
+    tenants ||--o{ data_processing_agreements : "firma_acuerdos"
+    tenants ||--o{ impact_assessments : "realiza_evaluaciones"
+    tenants ||--o{ compliance_tasks : "gestiona_tareas"
+    tenants ||--o{ audit_log : "genera_logs"
+    
+    audit_log {
+        uuid id PK
+        uuid tenant_id FK
+        uuid user_id FK
+        uuid session_id FK
+        text action
+        text table_name
+        jsonb old_data
+        jsonb new_data
+        inet ip
+        timestamptz created_at
+        bytea hash_prev
+        bytea signature
+    }
+
+    data_subject_requests {
+        uuid id PK
+        uuid tenant_id FK
+        uuid profile_id FK
+        request_type_t request_type
+        status_t status
+        jsonb request_data
+        jsonb response_data
+        timestamptz received_at
+        timestamptz resolved_at
+        boolean identity_verified
+    }
+
+    data_bank_registrations {
+        uuid id PK
+        uuid tenant_id FK
+        text registration_number
+        text authority
+        timestamptz registration_date
+        timestamptz expiry_date
+        status_t status
+    }
+
+    ccpa_opt_outs {
+        uuid id PK
+        uuid tenant_id FK
+        uuid profile_id FK
+        text channel
+        timestamptz opted_out_at
+        text reason
+    }
+
+    data_processing_agreements {
+        uuid id PK
+        uuid tenant_id FK
+        text agreement_name
+        text processor_name
+        timestamptz effective_date
+        timestamptz expiry_date
+        status_t status
+        jsonb terms
+    }
+
+    impact_assessments {
+        uuid id PK
+        uuid tenant_id FK
+        text assessment_name
+        timestamptz conducted_date
+        text risk_level
+        jsonb findings
+        status_t status
+    }
+
+    compliance_tasks {
+        uuid id PK
+        uuid tenant_id FK
+        text task_name
+        text task_type
+        timestamptz due_date
+        timestamptz completed_date
+        status_t status
+        uuid assigned_to FK
+    }
 ```
 
 ---
