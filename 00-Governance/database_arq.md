@@ -388,7 +388,7 @@ erDiagram
         uuid assigned_to FK
     }
 ```
-
+```sql
 Database Schema for dbdiagram.io
 sql
 // =============================================
@@ -931,7 +931,11 @@ Table request_type_t {
 // Note: 'Mockup: User profile update audit trail'
 // audit_log:
 //   - action: 'UPDATE', table_name: 'profiles', ip: '192.168.1.100'
-📋 Mockup Data with Real Examples
+```
+---
+### 📋 Mockup Data with Real Examples
+
+```sql
 sql
 -- =============================================
 -- 🎯 REAL-WORLD MOCKUP DATA
@@ -981,7 +985,7 @@ INSERT INTO feature_flags_identity (id, tenant_id, feature_name, enabled) VALUES
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '55555555-5555-5555-5555-555555555555',
  'enable_passkey', true);
 Este código está listo para importar en dbdiagram.io y muestra:
-
+```
 ---
 
 ## 🔒 3. Seguridad y Cumplimiento
