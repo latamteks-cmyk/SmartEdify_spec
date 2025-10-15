@@ -253,6 +253,7 @@ erDiagram
 ```
 ### Diagrama flowchart
 ---
+```flowchart
 flowchart TD
     %% === Definición de estilos por dominio ===
     classDef auth fill:#e6f7ff,stroke:#1890ff,color:#003366;
@@ -338,7 +339,7 @@ flowchart TD
 
     %% Auditoría
     tenants -->|registra| audit_log
----
+```
 ---
 
 ## **2. Entidades Principales y Relaciones**
