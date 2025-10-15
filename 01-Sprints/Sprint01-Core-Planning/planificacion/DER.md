@@ -5,6 +5,254 @@
 Este DER describe la estructura lógica y relacional de la base de datos para la Fase 1 de SmartEdify. Su propósito es asegurar **integridad de datos**, **aislamiento multi-tenant** y **cumplimiento normativo** desde la raíz del modelo.
 
 ---
+### Diagrama entidad-relación
+
+```mermaid
+erDiagram
+  users {
+    uuid id PK
+    citext email UNIQUE
+    text phone
+    text global_status FK
+    timestamptz email_verified_at
+    timestamptz created_at
+  }
+  tenants {
+    uuid id PK
+    text name
+    text legal_name
+    text tenant_type
+    text jurisdiction_root
+    text status FK
+    text data_residency
+    text dpo_contact
+    boolean international_transfers
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  user_tenant_assignments {
+    uuid id PK
+    uuid user_id FK
+    uuid tenant_id FK
+    text status FK
+    text default_role
+    timestamptz assigned_at
+    timestamptz removed_at
+    jsonb tenant_specific_settings
+  }
+  sessions {
+    uuid id PK
+    uuid user_id FK
+    uuid tenant_id FK
+    text device_id
+    text cnf_jkt
+    timestamptz not_after
+    timestamptz revoked_at
+    integer version
+    boolean storage_validation_passed
+    timestamptz created_at
+  }
+  refresh_tokens {
+    uuid id PK
+    uuid session_id FK
+    text token_hash
+    timestamptz expires_at
+    timestamptz created_at
+  }
+  profiles {
+    uuid id PK
+    uuid user_id FK
+    uuid tenant_id FK
+    citext email
+    text phone
+    text full_name
+    text status FK
+    text country_code FK
+    bytea personal_data_ct
+    bytea personal_data_aad
+    text personal_data_kid
+    boolean habeas_data_acceptance
+    timestamptz habeas_data_accepted_at
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz deleted_at
+  }
+  communication_consents {
+    uuid id PK
+    uuid profile_id FK
+    text channel
+    boolean consented
+    timestamptz consented_at
+    timestamptz revoked_at
+  }
+  condominiums {
+    uuid id PK
+    uuid tenant_id FK
+    text name
+    jsonb address
+    text jurisdiction
+    text timezone
+    text currency
+    text status FK
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  buildings {
+    uuid id PK
+    uuid condominium_id FK
+    text name
+    text address_line
+    integer floors
+    jsonb amenities
+    text status FK
+    timestamptz created_at
+  }
+  units {
+    uuid id PK
+    uuid building_id FK
+    text unit_number
+    text unit_type
+    numeric area
+    integer bedrooms
+    text status FK
+    timestamptz created_at
+  }
+  subunits {
+    uuid id PK
+    uuid unit_id FK
+    text subunit_number
+    text subunit_type
+    numeric area
+    text status FK
+  }
+  roles {
+    uuid id PK
+    uuid tenant_id FK
+    text name
+    jsonb permissions
+    timestamptz created_at
+  }
+  memberships {
+    uuid id PK
+    uuid tenant_id FK
+    uuid profile_id FK
+    uuid condominium_id FK
+    uuid unit_id FK
+    jsonb privileges
+    uuid responsible_profile_id FK
+    timestamptz since
+    timestamptz until
+    text status FK
+  }
+  role_assignments {
+    uuid id PK
+    uuid profile_id FK
+    uuid role_id FK
+    timestamptz assigned_at
+    timestamptz revoked_at
+    text status FK
+  }
+  delegations {
+    uuid id PK
+    uuid delegator_profile_id FK
+    uuid delegate_profile_id FK
+    uuid role_id FK
+    timestamptz start_date
+    timestamptz end_date
+    text status FK
+  }
+  data_subject_requests {
+    uuid id PK
+    uuid tenant_id FK
+    uuid profile_id FK
+    text request_type FK
+    text status FK
+    jsonb payload
+    timestamptz created_at
+    timestamptz resolved_at
+  }
+  data_bank_registrations {
+    uuid id PK
+    uuid tenant_id FK
+    text status FK
+    jsonb metadata
+    timestamptz created_at
+  }
+  data_processing_agreements {
+    uuid id PK
+    uuid tenant_id FK
+    text counterparty
+    text status FK
+    timestamptz created_at
+  }
+  impact_assessments {
+    uuid id PK
+    uuid tenant_id FK
+    text status FK
+    jsonb findings
+    timestamptz created_at
+  }
+  compliance_tasks {
+    uuid id PK
+    uuid tenant_id FK
+    text status FK
+    text title
+    jsonb details
+    timestamptz created_at
+  }
+  ccpa_opt_outs {
+    uuid id PK
+    uuid tenant_id FK
+    uuid profile_id FK
+    timestamptz created_at
+  }
+  audit_log {
+    uuid tenant_id FK
+    bigint seq PK
+    uuid id
+    uuid actor_user_id
+    uuid actor_session_id
+    text table_name
+    text action
+    jsonb row_pk
+    jsonb diff
+    jsonb payload
+    timestamptz created_at
+    bytea hash_prev
+    bytea hash_curr
+    bytea signature
+  }
+
+  users ||--o{ user_tenant_assignments : ""
+  tenants ||--o{ user_tenant_assignments : ""
+  users ||--o{ profiles : ""
+  tenants ||--o{ profiles : ""
+  profiles ||--o{ communication_consents : ""
+  tenants ||--o{ condominiums : ""
+  condominiums ||--o{ buildings : ""
+  buildings ||--o{ units : ""
+  units ||--o{ subunits : ""
+  tenants ||--o{ roles : ""
+  profiles ||--o{ memberships : ""
+  condominiums ||--o{ memberships : ""
+  units ||--o{ memberships : ""
+  roles ||--o{ role_assignments : ""
+  profiles ||--o{ role_assignments : ""
+  profiles ||--o{ delegations : ""
+  profiles ||--o{ delegations : ""
+  roles ||--o{ delegations : ""
+  tenants ||--o{ data_subject_requests : ""
+  profiles ||--o{ data_subject_requests : ""
+  tenants ||--o{ data_bank_registrations : ""
+  tenants ||--o{ data_processing_agreements : ""
+  tenants ||--o{ impact_assessments : ""
+  tenants ||--o{ compliance_tasks : ""
+  tenants ||--o{ ccpa_opt_outs : ""
+  profiles ||--o{ ccpa_opt_outs : ""
+  tenants ||--o{ audit_log : ""
+```
+
+---
 
 ## **2. Entidades Principales y Relaciones**
 
