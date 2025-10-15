@@ -1,15 +1,3 @@
-¡Perfecto! Aquí tienes el **documento del Diagrama Entidad-Relación (DER)** para la **Fase 1 de SmartEdify**, siguiendo buenas prácticas, convenciones y el alcance funcional de los microservicios *Identity*, *User Profiles*, *Tenancy* y *Compliance*.
-
-Incluye:
-
-* Entidades principales y relaciones clave
-* Tipos de relaciones (1:N, N:1, N:M)
-* Notas de privacidad, multi-tenancy y RLS
-* Campos relevantes y claves externas
-* Resumen textual para consulta rápida de arquitectura SaaS
-
----
-
 # **Diagrama Entidad-Relación (DER) — SmartEdify Fase 1**
 
 ## **1. Introducción**
