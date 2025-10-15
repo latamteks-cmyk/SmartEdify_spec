@@ -251,9 +251,16 @@ erDiagram
     profiles ||--o{ ccpa_opt_outs : ""
     tenants ||--o{ audit_log : ""
 ```
-### Diagrama flowchart
+### ***Diagrama flowchart***
+### 🎨 Leyenda de colores por servicio:
+- **🔐 Auth & Identity**: Usuarios, sesiones, tenants
+- **👤 Perfil & Consentimiento**: Perfiles, consentimientos
+- **🏢 Propiedades**: Condominios, edificios, unidades
+- **🛡️ Acceso & Roles**: Roles, asignaciones, delegaciones
+- **📜 Cumplimiento (Compliance)**: Solicitudes de datos, CCPA, DPIA, etc.
+- **🔍 Auditoría**: Registro de auditoría
 ---
-```flowchart
+```mermaid
 flowchart TD
     %% === Definición de estilos por dominio ===
     classDef auth fill:#e6f7ff,stroke:#1890ff,color:#003366;
@@ -581,5 +588,3 @@ tenants ||--o{ audit_log : "registra"
 ---
 
 
-¿O deseas ver alguna sección en formato tabular para una especificación funcional más detallada?
-Puedo generar la imagen o el archivo fuente compatible con Lucidchart, Draw.io, dbdiagram.io o Mermaid según tu preferencia. ¡Indícame cuál necesitas!
