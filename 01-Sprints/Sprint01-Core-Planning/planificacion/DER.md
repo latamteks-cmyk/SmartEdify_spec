@@ -251,7 +251,94 @@ erDiagram
     profiles ||--o{ ccpa_opt_outs : ""
     tenants ||--o{ audit_log : ""
 ```
+### Diagrama flowchart
+---
+flowchart TD
+    %% === Definición de estilos por dominio ===
+    classDef auth fill:#e6f7ff,stroke:#1890ff,color:#003366;
+    classDef profile fill:#fff7e6,stroke:#fa8c16,color:#592d00;
+    classDef property fill:#f6ffed,stroke:#52c41a,color:#165200;
+    classDef rbac fill:#f9f0ff,stroke:#722ed1,color:#2e0d59;
+    classDef compliance fill:#fff0f6,stroke:#eb2f96,color:#590d3d;
+    classDef audit fill:#f0f5ff,stroke:#2f54eb,color:#001529;
 
+    %% === Entidades por dominio ===
+    %% Auth & Identity
+    users["👤 users"]:::auth
+    tenants["🏢 tenants"]:::auth
+    user_tenant_assignments["🧩 user_tenant_assignments"]:::auth
+    sessions["📱 sessions"]:::auth
+    refresh_tokens["🔄 refresh_tokens"]:::auth
+
+    %% Perfil & Consentimiento
+    profiles["🪪 profiles"]:::profile
+    communication_consents["✅ communication_consents"]:::profile
+
+    %% Propiedades
+    condominiums["🏘️ condominiums"]:::property
+    buildings["🏢 buildings"]:::property
+    units["🏠 units"]:::property
+    subunits["🚪 subunits"]:::property
+    memberships["🔑 memberships"]:::property
+
+    %% RBAC (Roles y Acceso)
+    roles["🎭 roles"]:::rbac
+    role_assignments["📎 role_assignments"]:::rbac
+    delegations["🤝 delegations"]:::rbac
+
+    %% Cumplimiento
+    data_subject_requests["📩 data_subject_requests"]:::compliance
+    ccpa_opt_outs["🚫 ccpa_opt_outs"]:::compliance
+    data_bank_registrations["🏦 data_bank_registrations"]:::compliance
+    data_processing_agreements["📑 data_processing_agreements"]:::compliance
+    impact_assessments["📊 impact_assessments"]:::compliance
+    compliance_tasks["✅ compliance_tasks"]:::compliance
+
+    %% Auditoría
+    audit_log["📜 audit_log"]:::audit
+
+    %% === Relaciones (flechas con etiquetas) ===
+    %% Auth
+    users -->|asigna| user_tenant_assignments
+    tenants -->|asigna| user_tenant_assignments
+    users -->|tiene| profiles
+    tenants -->|tiene| profiles
+    users -->|inicia| sessions
+    sessions -->|genera| refresh_tokens
+
+    %% Perfil
+    profiles -->|otorga| communication_consents
+    profiles -->|posee| memberships
+
+    %% Propiedades
+    tenants -->|administra| condominiums
+    condominiums -->|tiene| buildings
+    buildings -->|tiene| units
+    units -->|tiene| subunits
+    condominiums -->|asocia| memberships
+    units -->|asocia| memberships
+
+    %% RBAC
+    tenants -->|define| roles
+    roles -->|asigna| role_assignments
+    profiles -->|recibe| role_assignments
+    profiles -->|delega| delegations
+    roles -->|para| delegations
+    profiles -->|es delegado en| delegations
+
+    %% Cumplimiento
+    tenants -->|recibe| data_subject_requests
+    profiles -->|origina| data_subject_requests
+    tenants -->|gestiona| ccpa_opt_outs
+    profiles -->|inicia| ccpa_opt_outs
+    tenants -->|declara| data_bank_registrations
+    tenants -->|firma| data_processing_agreements
+    tenants -->|evalúa| impact_assessments
+    tenants -->|genera| compliance_tasks
+
+    %% Auditoría
+    tenants -->|registra| audit_log
+---
 ---
 
 ## **2. Entidades Principales y Relaciones**
