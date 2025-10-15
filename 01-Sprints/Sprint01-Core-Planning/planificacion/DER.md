@@ -248,7 +248,7 @@ erDiagram
     tenants ||--o{ impact_assessments : ""
     tenants ||--o{ compliance_tasks : ""
     tenants ||--o{ ccpa_opt_outs : ""
-    profiles ||--o{ ccpa_opt_outs : ""
+    profiles ||--o{ ccpa_opt_outs : ""``
     tenants ||--o{ audit_log : ""
     sessions ||--o{ refresh_tokens : "genera"
 ```
@@ -523,7 +523,7 @@ flowchart TD
 
 * **audit_log**
 
-  * *PK*: (tenant_id)
+  * *PK*: (tenant_id, seq)
   * tenant_id → tenants
   * Cubre toda acción relevante, particionado por fecha
   * Relación 1:N: un tenant tiene muchos registros de auditoría
@@ -531,8 +531,6 @@ flowchart TD
 ---
 
 ## **3. Diagrama Visual (formato texto/mermaid)**
-
-> Si requieres el DER en formato visual, este ejemplo es compatible con herramientas como [dbdiagram.io](https://dbdiagram.io) o cualquier editor Mermaid.
 
 ```mermaid
 erDiagram
@@ -559,7 +557,7 @@ tenants ||--o{ data_subject_requests : "recibe"
 profiles ||--o{ data_subject_requests : "origina"
 tenants ||--o{ data_bank_registrations : "declara"
 tenants ||--o{ data_processing_agreements : "firma"
-tenants ||--o{ impact_assessments : "evalua"
+tenants ||--o{ impact_assessments : "evalúa"
 tenants ||--o{ compliance_tasks : "genera"
 tenants ||--o{ ccpa_opt_outs : "gestiona"
 profiles ||--o{ ccpa_opt_outs : "inicia"
