@@ -9,247 +9,247 @@ Este DER describe la estructura lógica y relacional de la base de datos para la
 
 ```mermaid
 erDiagram
-  users {
-    UUID id PK
-    email
-    phone
-    global_status
-    email_verified_at
-    created_at
-  }
-  tenants {
-    UUID id PK
-    name
-    legal_name
-    tenant_type
-    jurisdiction_root
-    status
-    data_residency
-    dpo_contact
-    international_transfers
-    created_at
-    updated_at
-  }
-  user_tenant_assignments {
-    UUID id PK
-    user_id
-    tenant_id
-    status
-    default_role
-    assigned_at
-    removed_at
-    tenant_specific_settings
-  }
-  sessions {
-    UUID id PK
-    user_id
-    tenant_id
-    device_id
-    cnf_jkt
-    not_after
-    revoked_at
-    version
-    storage_validation_passed
-    created_at
-  }
-  refresh_tokens {
-    UUID id PK
-    session_id
-    token_hash
-    expires_at
-    created_at
-  }
-  profiles {
-    UUID id PK
-    user_id
-    tenant_id
-    email
-    phone
-    full_name
-    status
-    country_code
-    personal_data_ct
-    personal_data_aad
-    personal_data_kid
-    habeas_data_acceptance
-    habeas_data_accepted_at
-    created_at
-    updated_at
-    deleted_at
-  }
-  communication_consents {
-    UUID id PK
-    profile_id
-    channel
-    consented
-    consented_at
-    revoked_at
-  }
-  condominiums {
-    UUID id PK
-    tenant_id
-    name
-    address
-    jurisdiction
-    timezone
-    currency
-    status
-    created_at
-    updated_at
-  }
-  buildings {
-    UUID id PK
-    condominium_id
-    name
-    address_line
-    floors
-    amenities
-    status
-    created_at
-  }
-  units {
-    UUID id PK
-    building_id
-    unit_number
-    unit_type
-    area
-    bedrooms
-    status
-    created_at
-  }
-  subunits {
-    UUID id PK
-    unit_id
-    subunit_number
-    subunit_type
-    area
-    status
-  }
-  roles {
-    UUID id PK
-    tenant_id
-    name
-    permissions
-    created_at
-  }
-  memberships {
-    UUID id PK
-    tenant_id
-    profile_id
-    condominium_id
-    unit_id
-    privileges
-    responsible_profile_id
-    since
-    until
-    status
-  }
-  role_assignments {
-    UUID id PK
-    profile_id
-    role_id
-    assigned_at
-    revoked_at
-    status
-  }
-  delegations {
-    UUID id PK
-    delegator_profile_id
-    delegate_profile_id
-    role_id
-    start_date
-    end_date
-    status
-  }
-  data_subject_requests {
-    UUID id PK
-    tenant_id
-    profile_id
-    request_type
-    status
-    payload
-    created_at
-    resolved_at
-  }
-  data_bank_registrations {
-    UUID id PK
-    tenant_id
-    status
-    metadata
-    created_at
-  }
-  data_processing_agreements {
-    UUID id PK
-    tenant_id
-    counterparty
-    status
-    created_at
-  }
-  impact_assessments {
-    UUID id PK
-    tenant_id
-    status
-    findings
-    created_at
-  }
-  compliance_tasks {
-    UUID id PK
-    tenant_id
-    status
-    title
-    details
-    created_at
-  }
-  ccpa_opt_outs {
-    UUID id PK
-    tenant_id
-    profile_id
-    created_at
-  }
-  audit_log {
-    tenant_id
-    seq PK
-    id
-    actor_user_id
-    actor_session_id
-    table_name
-    action
-    row_pk
-    diff
-    payload
-    created_at
-    hash_prev
-    hash_curr
-    signature
-  }
+    users {
+        uuid id "PK"
+        citext email "UNIQUE"
+        text phone
+        text global_status "FK"
+        timestamptz email_verified_at
+        timestamptz created_at
+    }
+    tenants {
+        uuid id "PK"
+        text name
+        text legal_name
+        text tenant_type
+        text jurisdiction_root
+        text status "FK"
+        text data_residency
+        text dpo_contact
+        boolean international_transfers
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    user_tenant_assignments {
+        uuid id "PK"
+        uuid user_id "FK"
+        uuid tenant_id "FK"
+        text status "FK"
+        text default_role
+        timestamptz assigned_at
+        timestamptz removed_at
+        jsonb tenant_specific_settings
+    }
+    sessions {
+        uuid id "PK"
+        uuid user_id "FK"
+        uuid tenant_id "FK"
+        text device_id
+        text cnf_jkt
+        timestamptz not_after
+        timestamptz revoked_at
+        integer version
+        boolean storage_validation_passed
+        timestamptz created_at
+    }
+    refresh_tokens {
+        uuid id "PK"
+        uuid session_id "FK"
+        text token_hash
+        timestamptz expires_at
+        timestamptz created_at
+    }
+    profiles {
+        uuid id "PK"
+        uuid user_id "FK"
+        uuid tenant_id "FK"
+        citext email
+        text phone
+        text full_name
+        text status "FK"
+        text country_code "FK"
+        bytea personal_data_ct
+        bytea personal_data_aad
+        text personal_data_kid
+        boolean habeas_data_acceptance
+        timestamptz habeas_data_accepted_at
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+    communication_consents {
+        uuid id "PK"
+        uuid profile_id "FK"
+        text channel
+        boolean consented
+        timestamptz consented_at
+        timestamptz revoked_at
+    }
+    condominiums {
+        uuid id "PK"
+        uuid tenant_id "FK"
+        text name
+        jsonb address
+        text jurisdiction
+        text timezone
+        text currency
+        text status "FK"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    buildings {
+        uuid id "PK"
+        uuid condominium_id "FK"
+        text name
+        text address_line
+        integer floors
+        jsonb amenities
+        text status "FK"
+        timestamptz created_at
+    }
+    units {
+        uuid id "PK"
+        uuid building_id "FK"
+        text unit_number
+        text unit_type
+        numeric area
+        integer bedrooms
+        text status "FK"
+        timestamptz created_at
+    }
+    subunits {
+        uuid id "PK"
+        uuid unit_id "FK"
+        text subunit_number
+        text subunit_type
+        numeric area
+        text status "FK"
+    }
+    roles {
+        uuid id "PK"
+        uuid tenant_id "FK"
+        text name
+        jsonb permissions
+        timestamptz created_at
+    }
+    memberships {
+        uuid id "PK"
+        uuid tenant_id "FK"
+        uuid profile_id "FK"
+        uuid condominium_id "FK"
+        uuid unit_id "FK"
+        jsonb privileges
+        uuid responsible_profile_id "FK"
+        timestamptz since
+        timestamptz until
+        text status "FK"
+    }
+    role_assignments {
+        uuid id "PK"
+        uuid profile_id "FK"
+        uuid role_id "FK"
+        timestamptz assigned_at
+        timestamptz revoked_at
+        text status "FK"
+    }
+    delegations {
+        uuid id "PK"
+        uuid delegator_profile_id "FK"
+        uuid delegate_profile_id "FK"
+        uuid role_id "FK"
+        timestamptz start_date
+        timestamptz end_date
+        text status "FK"
+    }
+    data_subject_requests {
+        uuid id "PK"
+        uuid tenant_id "FK"
+        uuid profile_id "FK"
+        text request_type "FK"
+        text status "FK"
+        jsonb payload
+        timestamptz created_at
+        timestamptz resolved_at
+    }
+    data_bank_registrations {
+        uuid id "PK"
+        uuid tenant_id "FK"
+        text status "FK"
+        jsonb metadata
+        timestamptz created_at
+    }
+    data_processing_agreements {
+        uuid id "PK"
+        uuid tenant_id "FK"
+        text counterparty
+        text status "FK"
+        timestamptz created_at
+    }
+    impact_assessments {
+        uuid id "PK"
+        uuid tenant_id "FK"
+        text status "FK"
+        jsonb findings
+        timestamptz created_at
+    }
+    compliance_tasks {
+        uuid id "PK"
+        uuid tenant_id "FK"
+        text status "FK"
+        text title
+        jsonb details
+        timestamptz created_at
+    }
+    ccpa_opt_outs {
+        uuid id "PK"
+        uuid tenant_id "FK"
+        uuid profile_id "FK"
+        timestamptz created_at
+    }
+    audit_log {
+        bigint seq "PK"
+        uuid id
+        uuid tenant_id "FK"
+        uuid actor_user_id
+        uuid actor_session_id
+        text table_name
+        text action
+        jsonb row_pk
+        jsonb diff
+        jsonb payload
+        timestamptz created_at
+        bytea hash_prev
+        bytea hash_curr
+        bytea signature
+    }
 
-  users ||--o{ user_tenant_assignments : ""
-  tenants ||--o{ user_tenant_assignments : ""
-  users ||--o{ profiles : ""
-  tenants ||--o{ profiles : ""
-  profiles ||--o{ communication_consents : ""
-  tenants ||--o{ condominiums : ""
-  condominiums ||--o{ buildings : ""
-  buildings ||--o{ units : ""
-  units ||--o{ subunits : ""
-  tenants ||--o{ roles : ""
-  profiles ||--o{ memberships : ""
-  condominiums ||--o{ memberships : ""
-  units ||--o{ memberships : ""
-  roles ||--o{ role_assignments : ""
-  profiles ||--o{ role_assignments : ""
-  profiles ||--o{ delegations : ""
-  profiles ||--o{ delegations : ""
-  roles ||--o{ delegations : ""
-  tenants ||--o{ data_subject_requests : ""
-  profiles ||--o{ data_subject_requests : ""
-  tenants ||--o{ data_bank_registrations : ""
-  tenants ||--o{ data_processing_agreements : ""
-  tenants ||--o{ impact_assessments : ""
-  tenants ||--o{ compliance_tasks : ""
-  tenants ||--o{ ccpa_opt_outs : ""
-  profiles ||--o{ ccpa_opt_outs : ""
-  tenants ||--o{ audit_log : ""
+    users ||--o{ user_tenant_assignments : ""
+    tenants ||--o{ user_tenant_assignments : ""
+    users ||--o{ profiles : ""
+    tenants ||--o{ profiles : ""
+    profiles ||--o{ communication_consents : ""
+    tenants ||--o{ condominiums : ""
+    condominiums ||--o{ buildings : ""
+    buildings ||--o{ units : ""
+    units ||--o{ subunits : ""
+    tenants ||--o{ roles : ""
+    profiles ||--o{ memberships : ""
+    condominiums ||--o{ memberships : ""
+    units ||--o{ memberships : ""
+    roles ||--o{ role_assignments : ""
+    profiles ||--o{ role_assignments : ""
+    profiles ||--o{ delegations : "delegator"
+    profiles }o--|| delegations : "delegate"
+    roles ||--o{ delegations : ""
+    tenants ||--o{ data_subject_requests : ""
+    profiles ||--o{ data_subject_requests : ""
+    tenants ||--o{ data_bank_registrations : ""
+    tenants ||--o{ data_processing_agreements : ""
+    tenants ||--o{ impact_assessments : ""
+    tenants ||--o{ compliance_tasks : ""
+    tenants ||--o{ ccpa_opt_outs : ""
+    profiles ||--o{ ccpa_opt_outs : ""
+    tenants ||--o{ audit_log : ""
 ```
 
 ---
