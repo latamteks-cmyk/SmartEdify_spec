@@ -261,6 +261,7 @@ erDiagram
 - **📜 Cumplimiento (Compliance)**: Solicitudes de datos, CCPA, DPIA, etc.
 - **🔍 Auditoría**: Registro de auditoría
 ---
+
 ```mermaid
 flowchart TD
     %% === Definición de estilos por dominio ===
@@ -476,7 +477,7 @@ flowchart TD
   * status → status_t
 
 ---
-****
+
 ### **E. Compliance**
 
 * **data_subject_requests**
