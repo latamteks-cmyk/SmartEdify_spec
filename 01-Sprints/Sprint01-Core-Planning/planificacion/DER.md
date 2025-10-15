@@ -248,7 +248,7 @@ erDiagram
     tenants ||--o{ impact_assessments : ""
     tenants ||--o{ compliance_tasks : ""
     tenants ||--o{ ccpa_opt_outs : ""
-    profiles ||--o{ ccpa_opt_outs : ""``
+    profiles ||--o{ ccpa_opt_outs : ""
     tenants ||--o{ audit_log : ""
     sessions ||--o{ refresh_tokens : "genera"
 ```
