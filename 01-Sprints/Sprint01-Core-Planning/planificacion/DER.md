@@ -250,6 +250,7 @@ erDiagram
     tenants ||--o{ ccpa_opt_outs : ""
     profiles ||--o{ ccpa_opt_outs : ""
     tenants ||--o{ audit_log : ""
+    sessions ||--o{ refresh_tokens : "genera"
 ```
 ### ***Diagrama flowchart***
 ### 🎨 Leyenda de colores por servicio:
@@ -475,7 +476,7 @@ flowchart TD
   * status → status_t
 
 ---
-
+****
 ### **E. Compliance**
 
 * **data_subject_requests**
@@ -522,7 +523,7 @@ flowchart TD
 
 * **audit_log**
 
-  * *PK*: (tenant_id, seq)
+  * *PK*: (tenant_id)
   * tenant_id → tenants
   * Cubre toda acción relevante, particionado por fecha
   * Relación 1:N: un tenant tiene muchos registros de auditoría
@@ -552,7 +553,7 @@ units ||--o{ memberships : "asocia"
 roles ||--o{ role_assignments : "asigna"
 profiles ||--o{ role_assignments : "recibe"
 profiles ||--o{ delegations : "puede delegar"
-profiles ||--o{ delegations : "puede ser delegado"
+profiles }o--|| delegations : "puede ser delegado"
 roles ||--o{ delegations : "para"
 tenants ||--o{ data_subject_requests : "recibe"
 profiles ||--o{ data_subject_requests : "origina"
@@ -563,6 +564,7 @@ tenants ||--o{ compliance_tasks : "genera"
 tenants ||--o{ ccpa_opt_outs : "gestiona"
 profiles ||--o{ ccpa_opt_outs : "inicia"
 tenants ||--o{ audit_log : "registra"
+sessions ||--o{ refresh_tokens : "genera"
 ```
 
 ---
