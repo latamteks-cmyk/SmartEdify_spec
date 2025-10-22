@@ -345,3 +345,45 @@ sequenceDiagram
 | **IN_PROGRESS** | ✅ | ✅ | ✅ | ✅ |
 
 **Cada tipo de convocatoria sigue su propio camino a través del ciclo de vida, con validaciones MCP en tiempo real garantizando el cumplimiento legal en todos los puntos.**
+
+## 📋 Tipos de Roles y Atribuciones
+
+´´´mermaid
+mindmap
+  root((Roles Organizacionales))
+    Junta de Propietarios
+      Presidente
+        :Firma actas y resoluciones
+        :Representación legal
+        :Convocatoria asambleas
+      Vicepresidente
+        :Suple presidente
+        :Comisiones especiales
+      Secretario
+        :Redacción actas
+        :Custodia documentación
+      Tesorero
+        :Fiscalización financiera
+        :Informes económicos
+    Administración
+      Administrador Principal
+        :Gestión operativa
+        :Ejecución acuerdos
+      Administrador Suplente
+        :Suple administrador
+        :Emergencias operativas
+    Comités
+      Comité Ética
+        :Resolución conflictos
+        :Aplicación reglamento
+      Comité Emergencia
+        :Decisiones urgentes
+        :Gestión crisis
+    Auditoría
+      Auditor Interno
+        :Control procesos
+        :Verificación cumplimiento
+      Revisor Fiscal
+        :Auditoría financiera
+        :Cumplimiento legal
+´´´
