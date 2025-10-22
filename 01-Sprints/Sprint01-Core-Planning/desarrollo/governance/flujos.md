@@ -348,7 +348,7 @@ sequenceDiagram
 
 ## 📋 Tipos de Roles y Atribuciones
 
-´´´mermaid
+```mermaid
 mindmap
   root((Roles Organizacionales))
     Junta de Propietarios
@@ -386,4 +386,4 @@ mindmap
       Revisor Fiscal
         :Auditoría financiera
         :Cumplimiento legal
-´´´
+```
