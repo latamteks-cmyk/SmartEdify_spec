@@ -650,15 +650,6 @@ sequenceDiagram
 | M-10 | Falla de rollback en rotación JWKS | Ventana de doble publicación 7 días, procedimiento de rollback y verificación de consumidores. |
 | M-11 | Falla de RLS por `tenant_id` mal propagado | Tests de seguridad, linters SQL, enforcer de contexto en gateway/sidecars. |
 | M-12 | Clientes guardan tokens en `localStorage` | BFF obligatorio, revisiones de seguridad de apps, headers y guías. |
-
-----|--------|------------|
-| R-01 | Clientes sin PKCE | Rechazo en `/authorize` sin `code_challenge`.
-| R-02 | Consumidores sin manejo de rollover JWKS | Pruebas de integración y guías.
-| R-03 | Latencia inter‑región | Cachés regionales y colas.
-| R-11 | Tokens en `localStorage` | Cookies HttpOnly o BFF; pruebas de QA.
-| R-12 | Errores de lectura de QR | TTL 300 s, `kid` obligatorio, E2E móvil.
-| R-13 | Desalineación de feature flags | Validación en CI/CD y observabilidad.
-
 ---
 
 ## 19. Roadmap
