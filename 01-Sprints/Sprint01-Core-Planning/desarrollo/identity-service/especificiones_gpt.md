@@ -79,6 +79,7 @@ graph TD
 
 ### 4.3 Sesiones y cierre de sesión
 - `POST /sessions/logout`  (logout global; efecto P95 ≤ 30 s)
+- `POST /sessions/context/switch`  (canjea sesión global por token contextual; requiere `session_id` activa y `ctx` {`tenant_id`, `condominium_id?`, `unit_id?`, `role_id?`}; TTL ≤ 10 min; DPoP obligatorio)
 
 ### 4.4 Tokens contextuales (QR)
 - `POST /identity/v2/contextual-tokens`  (COSE/JWS; TTL ≤ 300 s)
@@ -92,6 +93,66 @@ graph TD
 - RFC 7807. Tipo, título, detalle, `trace_id`, `tenant_id`, `timestamp`.
 
 ### 4.7 OpenAPI 3.1 (extracto)
+```yaml
+openapi: 3.1.0
+info:
+  title: SmartEdify Identity API
+  version: "3.6"
+servers:
+  - url: https://auth.{region}.smartedify.global/t/{tenant}
+paths:
+  /authorize:
+    get:
+      summary: OAuth2 Authorization Code (PKCE)
+      parameters:
+        - name: response_type; in: query; required: true; schema: {type: string, enum: [code]}
+        - name: client_id; in: query; required: true; schema: {type: string}
+        - name: redirect_uri; in: query; required: true; schema: {type: string, format: uri}
+        - name: code_challenge; in: query; required: true; schema: {type: string}
+        - name: code_challenge_method; in: query; required: true; schema: {type: string, enum: [S256]}
+        - name: scope; in: query; schema: {type: string}
+        - name: state; in: query; schema: {type: string}
+      responses: {"302": {description: Redirect}}
+  /oauth/token:
+    post:
+      summary: Token endpoint
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type: {type: string, enum: [authorization_code, refresh_token]}
+                code: {type: string}
+                redirect_uri: {type: string, format: uri}
+                code_verifier: {type: string}
+                refresh_token: {type: string}
+      responses:
+        "200": {description: Tokens}
+  /sessions/context/switch:
+    post:
+      summary: Canjear sesión global por token contextual
+      description: Emite access token contextual de vida corta para el contexto solicitado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ctx]
+              properties:
+                ctx:
+                  type: object
+                  properties:
+                    resource_tenant_id: {type: string, format: uuid}
+                    condominium_id: {type: string, format: uuid}
+                    unit_id: {type: string, format: uuid}
+                    role_id: {type: string}
+      responses:
+        "200": {description: Token contextual}
+        "400": {description: Contexto inválido}
+        "401": {description: Sesión no válida}
+        "409": {description: Membership desactualizada}
 ```yaml
 openapi: 3.1.0
 info:
@@ -161,14 +222,31 @@ allow {
 }
 ```
 
+**Claims de contexto y evaluación**
+- Los tokens contextuales incluyen `ctx` `{resource_tenant_id, condominium_id?, unit_id?, role_id, membership_etag}` y `act.managing_tenant_id` cuando aplica, más `path` jerárquico.
+- Las políticas deben validar que `input.resource.path` contiene el prefijo `token.path` y que `membership_etag` coincide con UPS.
+
+Ejemplo OPA con jerarquía y etag:
+```rego
+package authz
+allow {
+  input.token.sub == input.resource.owner
+  startswith(input.resource.path, input.token.path)
+  data.ups.membership_etag[input.token.sub] == input.token.ctx.membership_etag
+}
+```
+
 ---
 
 ## 7. Tokens, sesiones y claves
 
 ### 7.1 Access Token (JWT)
 - Vida útil ≤ 10 min. Algoritmo ES256/EdDSA. `kid` obligatorio. `aud` específica por servicio.
-- Claims mínimos: `sub`, `iss`, `aud`, `exp`, `iat`, `jti`, `scope`, `tenant_id`, `region`, `cnf`.
-
+- Claims mínimos: `sub`, `iss`, `aud`, `exp`, `iat`, `jti`, `scope`, `region`, `cnf`.
+- Claims de contexto (cuando aplica):
+  -  `ctx`: `{resource_tenant_id, condominium_id?, unit_id?, role_id, membership_etag}`.
+  - `act`: `{managing_tenant_id}` si el actor opera bajo una administradora.
+  - `path`: array jerárquico para PDP.
 ### 7.2 Refresh Token
 - Rotación obligatoria. Familia con `family_id`, `replaced_by_id`. Constrained por DPoP (`cnf.jkt`).
 
@@ -215,6 +293,12 @@ allow {
 ### 7.5 JWKS rotation
 - Rotación cada 90 días. Rollover 7 días con dos claves activas por tenant. `kid` = `{region}-{tenant}-{timestamp}`. TTL de caché en consumidores ≤ 1 h.
 
+### 7.6 Tokens contextuales y cambio de contexto
+- La sesión es global por usuario×dispositivo y **no** se ancla a un tenant. No lleva contexto activo.
+- Endpoint `POST /sessions/context/switch` emite un access token **contextual** con `ctx/act/path` y TTL ≤ 10 min.
+- Validación: UPS confirma `membership_etag`; cache efímero ≤ 5 min.
+- Revocación: global (todas las `session_contexts`) o selectiva por `{tenant|condominio|unidad}`.
+
 ---
 
 ## 8. Datos y esquemas
@@ -229,7 +313,7 @@ allow {
 -- Artefactos de autenticación y control de sesión en identity-service
 CREATE TABLE webauthn_credentials (
   id UUID PRIMARY KEY,
-  user_id UUID NOT NULL,             -- Referencia lógica a UPS.users.id
+  user_id UUID NOT NULL,
   tenant_id UUID NOT NULL,
   credential_id BYTEA NOT NULL,
   public_key BYTEA NOT NULL,
@@ -259,7 +343,7 @@ CREATE TABLE refresh_tokens (
 CREATE TABLE sessions (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL,
-  tenant_id UUID NOT NULL,
+  issuer_id UUID NOT NULL,           -- realm de identidad / issuer
   device_id TEXT,
   cnf_jkt TEXT,
   not_after TIMESTAMPTZ NOT NULL,
@@ -268,19 +352,41 @@ CREATE TABLE sessions (
   last_seen_at TIMESTAMPTZ
 );
 
+ (p. ej., administradora)
+  device_id TEXT,
+  cnf_jkt TEXT,
+  not_after TIMESTAMPTZ NOT NULL,
+  revoked_at TIMESTAMPTZ,
+  version INT DEFAULT 1,
+  last_seen_at TIMESTAMPTZ
+);
+
+CREATE TABLE session_contexts (
+  id UUID PRIMARY KEY,
+  session_id UUID NOT NULL,
+  user_id UUID NOT NULL,
+  resource_tenant_id UUID NOT NULL,
+  condominium_id UUID,
+  unit_id UUID,
+  role_id TEXT,
+  membership_etag TEXT NOT NULL,
+  last_activated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(session_id, resource_tenant_id, condominium_id, unit_id)
+);
+
 -- Outbox para propagación de cambios de sesión
 CREATE TABLE session_events (
   id UUID PRIMARY KEY,
   session_id UUID NOT NULL,
   tenant_id UUID NOT NULL,
-  event_type TEXT NOT NULL,          -- created|refreshed|revoked|logout_all
+  event_type TEXT NOT NULL,          -- created|refreshed|revoked|logout_all|context_switched
   payload JSONB NOT NULL,
   occurred_at TIMESTAMPTZ DEFAULT NOW(),
   published BOOLEAN DEFAULT false
 );
 ```
 
-- **RLS** en tablas de `identity-service` por `tenant_id`.
+- **RLS** en tablas de `identity-service` por `resource_tenant_id` en `session_contexts` y por `issuer_id` en `sessions`.
 - PII sensible permanece en UPS. En `identity-service` solo IDs y metadatos técnicos.
 
 ### 8.2 Contratos entre UPS e Identity
@@ -292,7 +398,7 @@ CREATE TABLE session_events (
 
 ### 8.3 Impactos en claims y validación
 - `sub` = `user_id` de UPS.  
-- `tenant_id` obligatorio en access tokens.  
+- `resource_tenant_id` en token proviene del contexto `ctx`.  
 - No se incluyen atributos personales en tokens; se resuelven vía UPS cuando se requieren.
 
 ---
@@ -366,11 +472,12 @@ sequenceDiagram
 
 ## 10. Observabilidad
 
-- **Métricas Prometheus:** `auth_latency_seconds{method,region}`, `login_success_total{method}`, `dpop_replay_denied_total`, `jwks_cache_refresh_total`, `dsar_delete_total`, `logout_global_p95_seconds`, `webauthn_registration_error_rate`, `qr_identity_validation_error_rate`, `feature_flag_mismatch_detected_total`.
-- **Trazas:** OpenTelemetry con `tenant_id`, `user_id`, `auth_method`, `jti`.
+- **Métricas Prometheus:** `auth_latency_seconds{method,region}`, `login_success_total{method}`, `dpop_replay_denied_total`, `jwks_cache_refresh_total`, `dsar_delete_total`, `logout_global_p95_seconds`, `webauthn_registration_error_rate`, `qr_identity_validation_error_rate`, `feature_flag_mismatch_detected_total`, `session_cache_hit_ratio`, `session_context_switch_seconds`, `session_contexts_active_total`.
+- **Trazas:** OpenTelemetry con `tenant_id`, `user_id`, `auth_method`, `jti`, `ctx.resource_tenant_id`, `ctx.condominium_id`, `ctx.unit_id`.
 - **Logs:** JSON, sin PII. Correlación por `trace_id`.
 - **SLOs:**
   - Emisión de tokens P95 ≤ 150 ms.
+  - Context switch P95 ≤ 300 ms.
   - Logout global P95 ≤ 30 s.
   - Disponibilidad mensual ≥ 99.95%.
 
@@ -875,42 +982,120 @@ components:
 
 ## 23. Anexo — Definition of Done (DoD v3.6)
 
+### 23.1 Alcance
+Define los criterios mínimos y verificables para dar por terminado un incremento del `identity-service` en SmartEdify. Aplica a funcionalidad, seguridad, privacidad, rendimiento, observabilidad y operación multi‑tenant.
+
+### 23.2 Criterios de aceptación por dominio
+
 **Arquitectura y diseño**
-- [ ] ADRs actualizados y aprobados para cambios de seguridad, datos y despliegue.
-- [ ] Esquemas DB versionados y migraciones reversibles.
+- [ ] ADRs actualizados y aprobados para cambios de seguridad, datos, despliegue y multi‑tenant.
+- [ ] Esquemas DB versionados con migraciones reversibles y pruebas de migración.
+- [ ] Compatibilidad hacia atrás en APIs públicas (OpenAPI 3.1) sin `breaking` o con versión mayor.
 
 **Seguridad**
-- [ ] Algoritmos permitidos: ES256/EdDSA únicamente; HS256 bloqueado en CI.
-- [ ] MFA por defecto para operaciones críticas; pruebas de bypass inexistentes.
-- [ ] Lint de cabeceras de seguridad activo; CSP/HSTS configurados.
+- [ ] Algoritmos permitidos: ES256/EdDSA únicamente. HS256 bloqueado por linter en CI.
+- [ ] MFA requerido para operaciones críticas; pruebas de flujo AAL2/AAL3.
+- [ ] SAST/SCA sin vulnerabilidades **Critical/High**. IAST/DAST sin findings explotables **High**.
+- [ ] Secretos gestionados por KMS; verificación de rotación y de llaves activas.
+- [ ] DPoP activo y anti‑replay operativo con pruebas de colisión `jti`.
 
 **Cumplimiento y privacidad**
-- [ ] DSAR: producers/consumers validan `schema_version` y JWS detached.
-- [ ] No PII en logs/events; verificado por políticas OPA en pipelines.
+- [ ] DSAR: producers/consumers validan `schema_version` y firma JWS detached.
+- [ ] No PII en logs ni en eventos; políticas de pipeline que lo verifiquen.
+- [ ] Auditoría WORM recibida ≤ 60 s desde evento de seguridad.
 
 **Calidad y pruebas**
-- [ ] Unitarias ≥ 80% en módulos de PKCE, DPoP, rotación de refresh.
-- [ ] Contract tests de OpenAPI y AsyncAPI pasan en CI.
-- [ ] E2E de login WebAuthn, refresh, logout global, DSAR, JWKS rollover.
-- [ ] Caos: Redis down, lag Kafka, KMS fallback, `db_only` y `readonly` ejecutados.
+- [ ] Unitarias ≥ 80% en módulos críticos (PKCE, DPoP, rotación de refresh, sesiones y `session_contexts`).
+- [ ] Contract tests de OpenAPI y AsyncAPI pasan en CI con compatibilidad backward/forward.
+- [ ] E2E: login WebAuthn, refresh, logout global, DSAR, JWKS rollover, cambio de contexto.
+- [ ] Fuzzing de JWT/COSE sin rechazos falsos > 0.1% y sin bypass aceptado.
 
 **Observabilidad**
-- [ ] Métricas expuestas y alertas activas: `auth_latency_seconds`, `logout_global_p95_seconds`, `dpop_replay_denied_total`, `session_cache_hit_ratio`, `auth_dpop_replay_latency_p95`.
-- [ ] Trazas OTel con `tenant_id`, `user_id`, `auth_method`, `jti`.
+- [ ] Métricas expuestas y alertas activas: `auth_latency_seconds`, `logout_global_p95_seconds`, `dpop_replay_denied_total`, `jwks_cache_refresh_total`, `session_cache_hit_ratio`, `session_context_switch_seconds`, `session_contexts_active_total`, `auth_dpop_replay_latency_p95`.
+- [ ] Trazas OTel con `tenant_id`, `user_id`, `auth_method`, `jti`, `ctx.resource_tenant_id`, `ctx.condominium_id`, `ctx.unit_id`.
+- [ ] Dashboards publicados para latencia, errores y revocaciones.
 
 **Operaciones y DR**
-- [ ] Runbooks: DSAR, JWKS rotation/rollback, sesiones `db_only`, warm‑up Redis.
-- [ ] Backups y restauración verificada; RPO/RTO dentro de objetivo.
+- [ ] Runbooks: DSAR, JWKS rotation/rollback, sesiones `db_only`, warm‑up Redis, `readonly` DB.
+- [ ] Backups restaurados en entorno de prueba; RPO ≤ 15 min, RTO ≤ 60 min.
+- [ ] Caos: Redis down, lag Kafka, KMS fallback, modos `db_only` y `readonly` ejecutados con éxito.
 
 **Documentación y contratos**
-- [ ] OpenAPI 3.1 publicado y versionado.
-- [ ] AsyncAPI §21 y §22 publicados.
+- [ ] OpenAPI 3.1 y AsyncAPI (§21, §22) publicados y versionados.
+- [ ] Guías de integración para consumidores con ejemplos de `ctx/act/path`.
 
-**Performance**
-- [ ] 2k RPS por región. `/oauth/token` P95 ≤ 200 ms. Logout global P95 ≤ 30 s.
+**Performance y capacidad**
+- [ ] 2k RPS por región. `/oauth/token` P95 ≤ 200 ms, `context switch` P95 ≤ 300 ms, logout global P95 ≤ 30 s bajo 500 usuarios concurrentes.
+- [ ] Pruebas con picos de revocación y colisiones de `jti`.
 
----
+**Datos y privacidad**
+- [ ] `users` reside en UPS. En Identity solo IDs y metadatos. RLS activa por `issuer_id` y `resource_tenant_id`.
+- [ ] Verificación de borrado de artefactos de autenticación por `subject_id` en DSAR.
 
+**Multitenancy y contexto**
+- [ ] Tokens contextuales incluyen `ctx.resource_tenant_id`, `condominium_id?`, `unit_id?`, `role_id`, `membership_etag`, `path` y `act.managing_tenant_id` si aplica.
+- [ ] Cambios de contexto con cache UPS coherente (`membership_etag`) ≤ 5 min.
+- [ ] Revocación selectiva por `{tenant|condominio|unidad}` validada.
+
+**Interoperabilidad OIDC/OAuth**
+- [ ] Suites de conformidad contra Okta/Auth0/Entra superadas para flujos base.
+
+### 23.3 Evidencia requerida
+| Evidencia | Artefacto mínimo |
+|---|---|
+| ADRs aprobados | `/docs/adr/*.md` con firmas de revisión |
+| OpenAPI/AsyncAPI | `/contracts/openapi.yaml`, `/contracts/asyncapi/*.yaml` |
+| Reportes SAST/SCA/DAST/IAST | `/reports/security/*` sin High/Critical abiertos |
+| Resultados E2E | `/reports/e2e/*.xml` con 100% passed |
+| Pruebas de caos | `/reports/chaos/*.md` con resultados y métricas |
+| Dashboards y alertas | Snapshots exportados `/observability/*` |
+| Backup y restore | Registro de prueba `/ops/dr/*` |
+
+### 23.4 Puertas de CI/CD
+| Etapa | Job | Condición de bloqueo |
+|---|---|---|
+| Build | `lint-algos-jwt` | Falla si HS256 detectado |
+| Test | `unit`, `contract-openapi`, `contract-asyncapi` | Cobertura y compatibilidad OK |
+| Seguridad | `sast`, `sca`, `dast`, `iast` | Cero High/Critical abiertos |
+| Performance | `perf-2k-rps` | P95 y errores dentro de objetivo |
+| Chaos | `chaos-sessions`, `chaos-kafka`, `chaos-kms` | Todos OK |
+| Deploy canario | `canary-verify-slo` | Burn rate SLO dentro de umbral |
+
+### 23.5 RACI de aprobación
+| Actividad | R | A | C | I |
+|---|---|---|---|---|
+| Seguridad y cifrado | SecOps | CTO | Dev Lead | PO |
+| Arquitectura | Arq. Software | CTO | SRE, Dev Lead | PO |
+| Calidad y E2E | QA Lead | PO | Dev Lead | SRE |
+| Operaciones/DR | SRE | CTO | SecOps | PO |
+| Contratos (API/Eventos) | Dev Lead | PO | Arq., QA | Consumidores |
+
+### 23.6 Plan de validación E2E
+- Login WebAuthn + PKCE + DPoP.
+- Refresh y rotación de familia de tokens.
+- Switch de contexto L↔M con recursos en A, B, C, D.
+- Revocación global y selectiva por unidad.
+- DSAR delete/export con productores múltiples y DLQ.
+- JWKS rollover con consumidores heterogéneos.
+
+### 23.7 Criterios de rollback
+- Burn rate SLO > umbral por 15 min.
+- Tasa de `context switch` fallido > 0.5% por 10 min.
+- `consumer_lag` DSAR > 5 min por 15 min.
+- Procedimiento: revertir a release `N-1`, reinstalar `old` JWKS si aplica, limpiar `session_contexts` incongruentes.
+
+### 23.8 Acta de cierre (plantilla)
+```
+Fecha:
+Versión:
+Alcance:
+Checklist cumplido: Sí/No (adjuntar evidencias)
+Excepciones aprobadas: Sí/No (detalle)
+Firmas: PO, CTO, SecOps, QA Lead, SRE
+```
+
+### 23.9 Mantenimiento del DoD
+- Revisión trimestral. Cambios via ADR y versión del presente anexo.
 ## 24. Anexo — Secuencias operativas
 
 ### 24.1 Login OIDC con WebAuthn y PKCE
