@@ -413,6 +413,23 @@ sequenceDiagram
 - Pruebas de carga con perfiles: login WebAuthn, refresh, introspect, validación de QR.
 - Caching: JWKS y decisiones de autorización TTL 60 s.
 
+### 12.1 Matriz de dependencias críticas
+
+| Servicio | Tipo | Datos tratados | SLO externo | Fallback / Modo degradado | Observabilidad | Owner |
+|---|---|---|---|---|---|---|
+| PostgreSQL (Identity DB) | Estado | Artefactos de sesión y credenciales | 99.95% | Modo `readonly` y `db_only`; no crear/refresh sesiones; validar tokens vigentes | Latencia, errores, conexión, locks | Plataforma Datos |
+| Redis | Cache/anti‑replay | Estado de sesión caliente y DPoP | 99.9% | `db_only`, cache local 60 s, warm‑up | `cache_hit_ratio`, memoria, evicciones | Plataforma Aplicativa |
+| Kafka | Bus eventos | Auditoría, DSAR, revocaciones | 99.9% | Cola interna + reintentos; DLQ | `consumer_lag`, errores, throughput | Plataforma Eventos |
+| KMS | Cifrado/firmas | CLAVES JWKS y JWS | 99.9% | Claves en caché, fallback región secundaria | Latencia firma, errores, rotación | Seguridad |
+| OPA/Cedar PDP | Autorización | Políticas | 99.9% | Caché decisiones 60 s; fail‑closed en rutas críticas | Latencia eval, `deny_rate` | Plataforma Seguridad |
+| User‑Profiles Service | Perfil | PII y memberships | 99.9% | Caché efímero 5 min; degradar atributos opcionales | Latencia, errores, tasa aciertos caché | Dominio Identidad |
+| Compliance Service | Cumplimiento | DSAR, jurisdicción | 99.9% | Fail‑closed si >60 s en rutas reguladas | Tiempos de DSAR, SLAs | Legal Tech |
+| Governance Service | Políticas negocio | Evaluación contextual | 99.9% | Cache regional de decisiones; colas | Latencia, `policy_miss` | Dominio Gobierno |
+| API Gateway | Entrada | N/A | 99.95% | Bypass controlado solo lectura metadatos | 5xx, p95 | Plataforma Edge |
+| Object Storage WORM | Auditoría | Eventos inmutables | 99.9% | Buffer local con reintentos | Tiempos de ingestión, errores | Plataforma Datos |
+| Feature Flags | Config runtime | Flags | 99.9% | Flags baked + cache local | `flag_mismatch` | DevEx |
+| Email/SMS Provider | Notificación | OTP | 99.9% | Proveedor secundario; throttling | Tasa entrega, latencia | Plataforma Comunicaciones |
+
 ---
 
 ## 13. Seguridad aplicativa
@@ -850,5 +867,95 @@ components:
     Timestamp:
       type: string
       format: date-time
+```
+
+
+
+---
+
+## 23. Anexo — Definition of Done (DoD v3.6)
+
+**Arquitectura y diseño**
+- [ ] ADRs actualizados y aprobados para cambios de seguridad, datos y despliegue.
+- [ ] Esquemas DB versionados y migraciones reversibles.
+
+**Seguridad**
+- [ ] Algoritmos permitidos: ES256/EdDSA únicamente; HS256 bloqueado en CI.
+- [ ] MFA por defecto para operaciones críticas; pruebas de bypass inexistentes.
+- [ ] Lint de cabeceras de seguridad activo; CSP/HSTS configurados.
+
+**Cumplimiento y privacidad**
+- [ ] DSAR: producers/consumers validan `schema_version` y JWS detached.
+- [ ] No PII en logs/events; verificado por políticas OPA en pipelines.
+
+**Calidad y pruebas**
+- [ ] Unitarias ≥ 80% en módulos de PKCE, DPoP, rotación de refresh.
+- [ ] Contract tests de OpenAPI y AsyncAPI pasan en CI.
+- [ ] E2E de login WebAuthn, refresh, logout global, DSAR, JWKS rollover.
+- [ ] Caos: Redis down, lag Kafka, KMS fallback, `db_only` y `readonly` ejecutados.
+
+**Observabilidad**
+- [ ] Métricas expuestas y alertas activas: `auth_latency_seconds`, `logout_global_p95_seconds`, `dpop_replay_denied_total`, `session_cache_hit_ratio`, `auth_dpop_replay_latency_p95`.
+- [ ] Trazas OTel con `tenant_id`, `user_id`, `auth_method`, `jti`.
+
+**Operaciones y DR**
+- [ ] Runbooks: DSAR, JWKS rotation/rollback, sesiones `db_only`, warm‑up Redis.
+- [ ] Backups y restauración verificada; RPO/RTO dentro de objetivo.
+
+**Documentación y contratos**
+- [ ] OpenAPI 3.1 publicado y versionado.
+- [ ] AsyncAPI §21 y §22 publicados.
+
+**Performance**
+- [ ] 2k RPS por región. `/oauth/token` P95 ≤ 200 ms. Logout global P95 ≤ 30 s.
+
+---
+
+## 24. Anexo — Secuencias operativas
+
+### 24.1 Login OIDC con WebAuthn y PKCE
+```mermaid
+sequenceDiagram
+  autonumber
+  participant C as Client (SPA/BFF)
+  participant GW as API Gateway
+  participant IS as identity-service
+  participant UPS as user-profiles
+  participant K as Kafka
+
+  C->>GW: GET /authorize?response_type=code&pkce
+  GW->>IS: /authorize
+  IS->>UPS: GET /internal/users/{user_id} (cache ≤5m)
+  UPS-->>IS: 200 OK (status, membership_etag)
+  IS-->>GW: 302 redirect to WebAuthn
+  C->>IS: navigator.credentials.get() (challenge)
+  IS-->>C: challenge
+  C->>IS: assertion (AAL3)
+  IS-->>GW: 302 redirect with code
+  C->>GW: POST /oauth/token (code, code_verifier, DPoP)
+  GW->>IS: /oauth/token (mTLS/private_key_jwt)
+  IS->>IS: Validar PKCE + DPoP + anti‑replay
+  IS-->>GW: 200 {access, refresh}
+  GW-->>C: 200
+  IS->>K: auth.login.succeeded (audit WORM)
+```
+
+### 24.2 Validación de QR → Governance
+```mermaid
+sequenceDiagram
+  autonumber
+  participant M as Mobile App
+  participant GW as API Gateway
+  participant IS as identity-service
+  participant GOV as governance-service
+
+  M->>IS: POST /identity/v2/contextual-tokens (solicita QR)
+  IS-->>M: 201 token COSE/JWS (TTL ≤300s)
+  M->>GW: Presenta QR (token)
+  GW->>IS: POST /identity/v2/contextual-tokens/validate (DPoP)
+  IS-->>GW: 200 {sub, tenant_id, cnf}
+  GW->>GOV: POST /evaluate (contexto + identidad)
+  GOV-->>GW: 200 decisión
+  GW-->>M: 200 acceso permitido/denegado
 ```
 
